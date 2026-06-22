@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Filter, GraduationCap, X } from "lucide-react";
 import { Card, EmptyHint, PageHeader, StatusPill } from "@/components/ui-bits";
@@ -20,6 +20,7 @@ export const Route = createFileRoute("/_app/universities")({
 function UniversitiesPage() {
   const clients = useStore(s => s.clients);
   const search = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
   const [showFilters, setShowFilters] = useState(false);
 
   const rows = clients.flatMap(c =>
@@ -33,6 +34,9 @@ function UniversitiesPage() {
     if (search.country && r.country !== search.country) return false;
     return true;
   });
+
+  const upd = (patch: Partial<typeof search>) =>
+    navigate({ search: (prev: typeof search) => ({ ...prev, ...patch }) });
 
   return (
     <div>
@@ -52,19 +56,9 @@ function UniversitiesPage() {
       <Card className="mb-4 p-3">
         <input
           value={search.q}
-          onChange={e =>
-            Route.useNavigate
-              ? null
-              : null
-          }
+          onChange={e => upd({ q: e.target.value })}
           placeholder="Search university, program, country…"
           className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:border-ring focus:ring-1 focus:ring-ring"
-          onInput={(e) => {
-            const v = (e.target as HTMLInputElement).value;
-            window.history.replaceState(null, "", `?q=${encodeURIComponent(v)}${search.status ? `&status=${search.status}` : ""}${search.country ? `&country=${search.country}` : ""}`);
-            // force re-render via custom event
-            window.dispatchEvent(new Event("popstate"));
-          }}
         />
         {showFilters && (
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -72,19 +66,13 @@ function UniversitiesPage() {
               label="Status"
               value={search.status}
               options={[...STATUSES]}
-              onChange={v => {
-                window.history.replaceState(null, "", `?q=${encodeURIComponent(search.q)}${v ? `&status=${v}` : ""}${search.country ? `&country=${search.country}` : ""}`);
-                window.dispatchEvent(new Event("popstate"));
-              }}
+              onChange={v => upd({ status: v })}
             />
             <FilterSelect
               label="Country"
               value={search.country}
               options={DESTINATIONS}
-              onChange={v => {
-                window.history.replaceState(null, "", `?q=${encodeURIComponent(search.q)}${search.status ? `&status=${search.status}` : ""}${v ? `&country=${v}` : ""}`);
-                window.dispatchEvent(new Event("popstate"));
-              }}
+              onChange={v => upd({ country: v })}
             />
           </div>
         )}
@@ -111,7 +99,7 @@ function UniversitiesPage() {
               </thead>
               <tbody>
                 {filtered.map(r => (
-                  <tr key={r.id} className="border-b border-border last:border-0 transition hover:bg-secondary/30">
+                  <tr key={r.id + r.clientId} className="border-b border-border last:border-0 transition hover:bg-secondary/30">
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
                         <span className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-accent-foreground">
