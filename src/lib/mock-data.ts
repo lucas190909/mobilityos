@@ -97,14 +97,50 @@ const DOC_TEMPLATE: Omit<Document, "id">[] = [
 ];
 
 const NAMES = [
-  "Aarav Sharma", "Sofia Martinez", "Liam Chen", "Amelia Okafor", "Noah Tanaka",
-  "Isabella Rossi", "Mateo Silva", "Olivia Dubois", "Yusuf Demir", "Mei Wang",
-  "Carlos Mendoza", "Priya Patel", "Ethan Kim", "Layla Hassan", "Lucas Becker",
-  "Zara Ahmed", "Diego Rivera", "Nora Lindqvist", "Hiro Yamada", "Anaya Iyer",
+  "Aarav Sharma",
+  "Sofia Martinez",
+  "Liam Chen",
+  "Amelia Okafor",
+  "Noah Tanaka",
+  "Isabella Rossi",
+  "Mateo Silva",
+  "Olivia Dubois",
+  "Yusuf Demir",
+  "Mei Wang",
+  "Carlos Mendoza",
+  "Priya Patel",
+  "Ethan Kim",
+  "Layla Hassan",
+  "Lucas Becker",
+  "Zara Ahmed",
+  "Diego Rivera",
+  "Nora Lindqvist",
+  "Hiro Yamada",
+  "Anaya Iyer",
 ];
 
-export const COUNTRIES_FROM = ["India", "Brazil", "China", "Nigeria", "Japan", "Italy", "Mexico", "France", "Turkey", "Vietnam"];
-export const DESTINATIONS = ["Canada", "USA", "UK", "Germany", "Australia", "Netherlands", "Ireland", "France"];
+export const COUNTRIES_FROM = [
+  "India",
+  "Brazil",
+  "China",
+  "Nigeria",
+  "Japan",
+  "Italy",
+  "Mexico",
+  "France",
+  "Turkey",
+  "Vietnam",
+];
+export const DESTINATIONS = [
+  "Canada",
+  "USA",
+  "UK",
+  "Germany",
+  "Australia",
+  "Netherlands",
+  "Ireland",
+  "France",
+];
 export const INTAKES = ["Fall 2026", "Spring 2027", "Fall 2027"];
 export const CONSULTANTS = ["Emma Wilson", "James Carter", "Priya Singh", "Lukas Meyer"];
 export const UNIVERSITIES_LIST = [
@@ -128,7 +164,7 @@ export function buildSeed(): Client[] {
     const progress = Math.min(100, (STAGES.indexOf(stage) + 1) * 12 + (i % 5));
     const destination = pick(DESTINATIONS, i);
     const uni =
-      UNIVERSITIES_LIST.find(u => u.country === destination) ??
+      UNIVERSITIES_LIST.find((u) => u.country === destination) ??
       UNIVERSITIES_LIST[i % UNIVERSITIES_LIST.length];
     const docs: Document[] = DOC_TEMPLATE.map((d, j) => ({ ...d, id: `${i}-doc-${j}` }));
     if (i % 3 === 0) docs[3].status = "Approved";
@@ -151,23 +187,90 @@ export function buildSeed(): Client[] {
       phone: `+1 555 0${100 + i}`,
       documents: docs,
       universities: [
-        { id: `${i}-u1`, ...uni, deadline: "2026-09-15", status: i % 4 === 0 ? "Accepted" : "Applied", scholarship: i % 3 === 0 ? "$8,000 / year" : undefined },
-        { id: `${i}-u2`, ...UNIVERSITIES_LIST[(i + 2) % UNIVERSITIES_LIST.length], deadline: "2026-11-01", status: "Waiting" },
+        {
+          id: `${i}-u1`,
+          ...uni,
+          deadline: "2026-09-15",
+          status: i % 4 === 0 ? "Accepted" : "Applied",
+          scholarship: i % 3 === 0 ? "$8,000 / year" : undefined,
+        },
+        {
+          id: `${i}-u2`,
+          ...UNIVERSITIES_LIST[(i + 2) % UNIVERSITIES_LIST.length],
+          deadline: "2026-11-01",
+          status: "Waiting",
+        },
       ],
       tasks: [
-        { id: `${i}-t1`, title: "Request official transcript", clientId: `client-${i + 1}`, consultant: pick(CONSULTANTS, i), deadline: "2026-04-12", priority: "High", status: "In Progress" },
-        { id: `${i}-t2`, title: "Review statement of purpose", clientId: `client-${i + 1}`, consultant: pick(CONSULTANTS, i + 1), deadline: "2026-04-20", priority: "Medium", status: "Todo" },
-        { id: `${i}-t3`, title: "Book visa appointment", clientId: `client-${i + 1}`, consultant: pick(CONSULTANTS, i + 2), deadline: "2026-05-02", priority: "High", status: "Todo" },
+        {
+          id: `${i}-t1`,
+          title: "Request official transcript",
+          clientId: `client-${i + 1}`,
+          consultant: pick(CONSULTANTS, i),
+          deadline: "2026-04-12",
+          priority: "High",
+          status: "In Progress",
+        },
+        {
+          id: `${i}-t2`,
+          title: "Review statement of purpose",
+          clientId: `client-${i + 1}`,
+          consultant: pick(CONSULTANTS, i + 1),
+          deadline: "2026-04-20",
+          priority: "Medium",
+          status: "Todo",
+        },
+        {
+          id: `${i}-t3`,
+          title: "Book visa appointment",
+          clientId: `client-${i + 1}`,
+          consultant: pick(CONSULTANTS, i + 2),
+          deadline: "2026-05-02",
+          priority: "High",
+          status: "Todo",
+        },
       ],
       timeline: [
-        { id: `${i}-e1`, date: "2026-01-10", type: "Consultation", title: "Initial consultation completed" },
-        { id: `${i}-e2`, date: "2026-02-12", type: "Documents", title: "Passport and photo uploaded" },
-        { id: `${i}-e3`, date: "2026-02-28", type: "English Test", title: "IELTS results received (7.5)" },
-        { id: `${i}-e4`, date: "2026-03-15", type: "Application", title: `Application submitted to ${uni.name}` },
-        ...(STAGES.indexOf(stage) >= 4 ? [{ id: `${i}-e5`, date: "2026-04-05", type: "Offer", title: `Offer received from ${uni.name}` }] : []),
-        ...(STAGES.indexOf(stage) >= 5 ? [{ id: `${i}-e6`, date: "2026-05-10", type: "Visa", title: "Visa interview scheduled" }] : []),
+        {
+          id: `${i}-e1`,
+          date: "2026-01-10",
+          type: "Consultation",
+          title: "Initial consultation completed",
+        },
+        {
+          id: `${i}-e2`,
+          date: "2026-02-12",
+          type: "Documents",
+          title: "Passport and photo uploaded",
+        },
+        {
+          id: `${i}-e3`,
+          date: "2026-02-28",
+          type: "English Test",
+          title: "IELTS results received (7.5)",
+        },
+        {
+          id: `${i}-e4`,
+          date: "2026-03-15",
+          type: "Application",
+          title: `Application submitted to ${uni.name}`,
+        },
+        ...(STAGES.indexOf(stage) >= 4
+          ? [
+              {
+                id: `${i}-e5`,
+                date: "2026-04-05",
+                type: "Offer",
+                title: `Offer received from ${uni.name}`,
+              },
+            ]
+          : []),
+        ...(STAGES.indexOf(stage) >= 5
+          ? [{ id: `${i}-e6`, date: "2026-05-10", type: "Visa", title: "Visa interview scheduled" }]
+          : []),
       ],
-      notes: "Strong academic profile. Prefers cities with good public transport. Family is supportive of relocation.",
+      notes:
+        "Strong academic profile. Prefers cities with good public transport. Family is supportive of relocation.",
       essayReviewed: i % 3 !== 0,
       visaStatus: STAGES.indexOf(stage) >= 5 ? "In Progress" : "Not Started",
     };
@@ -175,30 +278,96 @@ export function buildSeed(): Client[] {
 }
 
 export const TEAM = [
-  { id: "u1", name: "Emma Wilson", role: "Administrator", email: "emma@mobilityos.com", photo: "https://i.pravatar.cc/100?img=47", clients: 12 },
-  { id: "u2", name: "James Carter", role: "Consultant", email: "james@mobilityos.com", photo: "https://i.pravatar.cc/100?img=12", clients: 9 },
-  { id: "u3", name: "Priya Singh", role: "Consultant", email: "priya@mobilityos.com", photo: "https://i.pravatar.cc/100?img=32", clients: 11 },
-  { id: "u4", name: "Lukas Meyer", role: "Assistant", email: "lukas@mobilityos.com", photo: "https://i.pravatar.cc/100?img=15", clients: 5 },
+  {
+    id: "u1",
+    name: "Emma Wilson",
+    role: "Administrator",
+    email: "emma@mobilityos.com",
+    photo: "https://i.pravatar.cc/100?img=47",
+    clients: 12,
+  },
+  {
+    id: "u2",
+    name: "James Carter",
+    role: "Consultant",
+    email: "james@mobilityos.com",
+    photo: "https://i.pravatar.cc/100?img=12",
+    clients: 9,
+  },
+  {
+    id: "u3",
+    name: "Priya Singh",
+    role: "Consultant",
+    email: "priya@mobilityos.com",
+    photo: "https://i.pravatar.cc/100?img=32",
+    clients: 11,
+  },
+  {
+    id: "u4",
+    name: "Lukas Meyer",
+    role: "Assistant",
+    email: "lukas@mobilityos.com",
+    photo: "https://i.pravatar.cc/100?img=15",
+    clients: 5,
+  },
 ];
 
 export const WORKFLOWS = [
-  { id: "wf1", name: "Canada Student", country: "Canada", steps: ["Consultation", "Documents", "IELTS", "College Application", "Offer Letter", "Study Permit", "Accommodation", "Flight"] },
-  { id: "wf2", name: "USA Undergraduate", country: "USA", steps: ["Consultation", "SAT", "Common App", "Acceptance", "I-20", "F1 Visa", "Travel"] },
-  { id: "wf3", name: "UK Master's", country: "UK", steps: ["Consultation", "IELTS", "UCAS Application", "Conditional Offer", "CAS Letter", "Tier 4 Visa", "Accommodation", "Flight"] },
+  {
+    id: "wf1",
+    name: "Canada Student",
+    country: "Canada",
+    steps: [
+      "Consultation",
+      "Documents",
+      "IELTS",
+      "College Application",
+      "Offer Letter",
+      "Study Permit",
+      "Accommodation",
+      "Flight",
+    ],
+  },
+  {
+    id: "wf2",
+    name: "USA Undergraduate",
+    country: "USA",
+    steps: ["Consultation", "SAT", "Common App", "Acceptance", "I-20", "F1 Visa", "Travel"],
+  },
+  {
+    id: "wf3",
+    name: "UK Master's",
+    country: "UK",
+    steps: [
+      "Consultation",
+      "IELTS",
+      "UCAS Application",
+      "Conditional Offer",
+      "CAS Letter",
+      "Tier 4 Visa",
+      "Accommodation",
+      "Flight",
+    ],
+  },
 ];
 
 export function aiSuggestionsFor(client: Client): string[] {
   const out: string[] = [];
-  const missing = client.documents.filter(d => d.status === "Missing");
+  const missing = client.documents.filter((d) => d.status === "Missing");
   if (missing.length)
-    out.push(`This client is missing ${missing.length} required document${missing.length > 1 ? "s" : ""} (${missing.map(m => m.name).join(", ")}).`);
-  const passport = client.documents.find(d => d.name === "Passport");
+    out.push(
+      `This client is missing ${missing.length} required document${missing.length > 1 ? "s" : ""} (${missing.map((m) => m.name).join(", ")}).`,
+    );
+  const passport = client.documents.find((d) => d.name === "Passport");
   if (passport?.expiresAt && new Date(passport.expiresAt) < new Date("2027-01-01")) {
-    out.push("The passport expires within 6 months of the intended travel date. Renewal recommended.");
+    out.push(
+      "The passport expires within 6 months of the intended travel date. Renewal recommended.",
+    );
   }
-  const upcoming = client.tasks.filter(t => t.status !== "Done").length;
+  const upcoming = client.tasks.filter((t) => t.status !== "Done").length;
   if (upcoming) out.push(`There are ${upcoming} upcoming tasks this week.`);
   if (!client.essayReviewed) out.push("The statement of purpose has not been reviewed yet.");
-  if (client.progress > 70) out.push("This application is almost complete — consider scheduling the visa appointment.");
+  if (client.progress > 70)
+    out.push("This application is almost complete — consider scheduling the visa appointment.");
   return out;
 }

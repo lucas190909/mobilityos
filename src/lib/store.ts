@@ -42,7 +42,7 @@ function persist() {
 
 function emit() {
   persist();
-  listeners.forEach(l => l());
+  listeners.forEach((l) => l());
 }
 
 function setState(updater: (s: AppState) => AppState) {
@@ -123,25 +123,25 @@ export function createClient(input: ClientInput): Client {
     essayReviewed: false,
     visaStatus: "Not Started",
   };
-  setState(s => ({ ...s, clients: [newClient, ...s.clients] }));
+  setState((s) => ({ ...s, clients: [newClient, ...s.clients] }));
   return newClient;
 }
 
 export function updateClient(id: string, patch: Partial<Client>) {
-  setState(s => ({
+  setState((s) => ({
     ...s,
-    clients: s.clients.map(c => (c.id === id ? { ...c, ...patch } : c)),
+    clients: s.clients.map((c) => (c.id === id ? { ...c, ...patch } : c)),
   }));
 }
 
 export function deleteClient(id: string) {
-  setState(s => ({ ...s, clients: s.clients.filter(c => c.id !== id) }));
+  setState((s) => ({ ...s, clients: s.clients.filter((c) => c.id !== id) }));
 }
 
 export function setClientStage(id: string, stage: Stage) {
-  setState(s => ({
+  setState((s) => ({
     ...s,
-    clients: s.clients.map(c => {
+    clients: s.clients.map((c) => {
       if (c.id !== id) return c;
       const progress = Math.min(100, Math.max(c.progress, (STAGES.indexOf(stage) + 1) * 12));
       const event = {
@@ -158,9 +158,9 @@ export function setClientStage(id: string, stage: Stage) {
 // ===== Documents =====
 export function addDocument(clientId: string, doc: Omit<Document, "id">): Document {
   const newDoc: Document = { ...doc, id: uid("doc") };
-  setState(s => ({
+  setState((s) => ({
     ...s,
-    clients: s.clients.map(c =>
+    clients: s.clients.map((c) =>
       c.id === clientId ? { ...c, documents: [...c.documents, newDoc] } : c,
     ),
   }));
@@ -168,21 +168,21 @@ export function addDocument(clientId: string, doc: Omit<Document, "id">): Docume
 }
 
 export function updateDocument(clientId: string, docId: string, patch: Partial<Document>) {
-  setState(s => ({
+  setState((s) => ({
     ...s,
-    clients: s.clients.map(c =>
+    clients: s.clients.map((c) =>
       c.id === clientId
-        ? { ...c, documents: c.documents.map(d => (d.id === docId ? { ...d, ...patch } : d)) }
+        ? { ...c, documents: c.documents.map((d) => (d.id === docId ? { ...d, ...patch } : d)) }
         : c,
     ),
   }));
 }
 
 export function deleteDocument(clientId: string, docId: string) {
-  setState(s => ({
+  setState((s) => ({
     ...s,
-    clients: s.clients.map(c =>
-      c.id === clientId ? { ...c, documents: c.documents.filter(d => d.id !== docId) } : c,
+    clients: s.clients.map((c) =>
+      c.id === clientId ? { ...c, documents: c.documents.filter((d) => d.id !== docId) } : c,
     ),
   }));
 }
@@ -194,9 +194,9 @@ export function setDocumentStatus(clientId: string, docId: string, status: DocSt
 // ===== Universities =====
 export function addUniversity(clientId: string, u: Omit<University, "id">): University {
   const newU: University = { ...u, id: uid("uni") };
-  setState(s => ({
+  setState((s) => ({
     ...s,
-    clients: s.clients.map(c =>
+    clients: s.clients.map((c) =>
       c.id === clientId ? { ...c, universities: [...c.universities, newU] } : c,
     ),
   }));
@@ -204,21 +204,21 @@ export function addUniversity(clientId: string, u: Omit<University, "id">): Univ
 }
 
 export function updateUniversity(clientId: string, uId: string, patch: Partial<University>) {
-  setState(s => ({
+  setState((s) => ({
     ...s,
-    clients: s.clients.map(c =>
+    clients: s.clients.map((c) =>
       c.id === clientId
-        ? { ...c, universities: c.universities.map(u => (u.id === uId ? { ...u, ...patch } : u)) }
+        ? { ...c, universities: c.universities.map((u) => (u.id === uId ? { ...u, ...patch } : u)) }
         : c,
     ),
   }));
 }
 
 export function deleteUniversity(clientId: string, uId: string) {
-  setState(s => ({
+  setState((s) => ({
     ...s,
-    clients: s.clients.map(c =>
-      c.id === clientId ? { ...c, universities: c.universities.filter(u => u.id !== uId) } : c,
+    clients: s.clients.map((c) =>
+      c.id === clientId ? { ...c, universities: c.universities.filter((u) => u.id !== uId) } : c,
     ),
   }));
 }
@@ -226,81 +226,81 @@ export function deleteUniversity(clientId: string, uId: string) {
 // ===== Tasks =====
 export function addTask(clientId: string, t: Omit<Task, "id" | "clientId">): Task {
   const newT: Task = { ...t, id: uid("task"), clientId };
-  setState(s => ({
+  setState((s) => ({
     ...s,
-    clients: s.clients.map(c => (c.id === clientId ? { ...c, tasks: [...c.tasks, newT] } : c)),
+    clients: s.clients.map((c) => (c.id === clientId ? { ...c, tasks: [...c.tasks, newT] } : c)),
   }));
   return newT;
 }
 
 export function updateTask(taskId: string, patch: Partial<Task>) {
-  setState(s => ({
+  setState((s) => ({
     ...s,
-    clients: s.clients.map(c => ({
+    clients: s.clients.map((c) => ({
       ...c,
-      tasks: c.tasks.map(t => (t.id === taskId ? { ...t, ...patch } : t)),
+      tasks: c.tasks.map((t) => (t.id === taskId ? { ...t, ...patch } : t)),
     })),
   }));
 }
 
 export function deleteTask(taskId: string) {
-  setState(s => ({
+  setState((s) => ({
     ...s,
-    clients: s.clients.map(c => ({ ...c, tasks: c.tasks.filter(t => t.id !== taskId) })),
+    clients: s.clients.map((c) => ({ ...c, tasks: c.tasks.filter((t) => t.id !== taskId) })),
   }));
 }
 
 // ===== Derived selectors =====
 export function getClient(id: string): Client | undefined {
-  return state.clients.find(c => c.id === id);
+  return state.clients.find((c) => c.id === id);
 }
 
 export function selectAllTasks(s: AppState) {
-  return s.clients.flatMap(c => c.tasks);
+  return s.clients.flatMap((c) => c.tasks);
 }
 
 export function selectKpis(s: AppState) {
   const clients = s.clients;
-  const active = clients.filter(c => c.status !== "Completed" && c.status !== "Lead").length;
-  const waitingDocs = clients.filter(c =>
-    c.documents.some(d => d.status === "Missing" || d.status === "Pending Review"),
+  const active = clients.filter((c) => c.status !== "Completed" && c.status !== "Lead").length;
+  const waitingDocs = clients.filter((c) =>
+    c.documents.some((d) => d.status === "Missing" || d.status === "Pending Review"),
   ).length;
   const today = new Date();
   const horizon = new Date();
   horizon.setMonth(today.getMonth() + 4);
-  const deadlines = clients.filter(c => c.deadline && new Date(c.deadline) < horizon).length;
-  const submitted = clients.filter(c => STAGES.indexOf(c.status) >= 3).length;
+  const deadlines = clients.filter((c) => c.deadline && new Date(c.deadline) < horizon).length;
+  const submitted = clients.filter((c) => STAGES.indexOf(c.status) >= 3).length;
   const visasApproved = clients.filter(
-    c => c.visaStatus === "Approved" || c.status === "Completed",
+    (c) => c.visaStatus === "Approved" || c.status === "Completed",
   ).length;
   return { active, waitingDocs, deadlines, submitted, visasApproved, total: clients.length };
 }
 
 export function selectApplicationsByCountry(s: AppState) {
   const map = new Map<string, number>();
-  s.clients.forEach(c => map.set(c.destination, (map.get(c.destination) ?? 0) + 1));
+  s.clients.forEach((c) => map.set(c.destination, (map.get(c.destination) ?? 0) + 1));
   return Array.from(map.entries()).map(([country, count]) => ({ country, count }));
 }
 
 export function selectClientsByStage(s: AppState) {
-  return STAGES.map(stage => ({
+  return STAGES.map((stage) => ({
     stage,
-    count: s.clients.filter(c => c.status === stage).length,
+    count: s.clients.filter((c) => c.status === stage).length,
   }));
 }
 
 export function selectRecentActivity(s: AppState) {
   return s.clients
-    .flatMap(c => c.timeline.map(e => ({ ...e, client: c.name, clientId: c.id })))
+    .flatMap((c) => c.timeline.map((e) => ({ ...e, client: c.name, clientId: c.id })))
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 10);
 }
 
 export function selectUrgentTasks(s: AppState) {
   return selectAllTasks(s)
-    .filter(t => t.priority === "High" && t.status !== "Done")
+    .filter((t) => t.priority === "High" && t.status !== "Done")
     .slice(0, 6)
-    .map(t => ({ ...t, clientName: s.clients.find(c => c.id === t.clientId)?.name ?? "" }));
+    .map((t) => ({ ...t, clientName: s.clients.find((c) => c.id === t.clientId)?.name ?? "" }));
 }
 
 export interface SearchResult {

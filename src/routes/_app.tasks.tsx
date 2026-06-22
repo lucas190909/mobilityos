@@ -3,9 +3,9 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Card, EmptyHint, PageHeader, StatusPill } from "@/components/ui-bits";
-import { selectAllTasks, updateTask, useStore } from "@/lib/store";
-import { DeleteTaskButton, TaskFormDialog } from "@/components/dialogs";
-import type { Task } from "@/lib/mock-data";
+import { useData } from "@/lib/data-provider";
+import { TaskFormDialog, DeleteTaskButton } from "@/components/dialogs";
+import type { Task } from "@/lib/database";
 
 const COLUMNS = ["Todo", "In Progress", "Done"] as const;
 
@@ -15,31 +15,41 @@ export const Route = createFileRoute("/_app/tasks")({
 });
 
 function TasksPage() {
-  const clients = useStore(s => s.clients);
-  const allTasks = useStore(selectAllTasks);
-  const tasks = allTasks.map(t => ({
-    ...t,
-    clientName: clients.find(c => c.id === t.clientId)?.name ?? "",
-  }));
+  const { clients, updateTask, isLoading } = useData();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Task | undefined>();
   const [dragId, setDragId] = useState<string | null>(null);
+
+  const allTasks = clients.flatMap((c) => c.tasks.map((t) => ({ ...t, clientName: c.name })));
 
   const openNew = () => {
     setEditing(undefined);
     setOpen(true);
   };
 
-  const onDrop = (col: (typeof COLUMNS)[number]) => {
+  const onDrop = async (col: (typeof COLUMNS)[number]) => {
     if (dragId) {
-      const t = tasks.find(x => x.id === dragId);
+      const t = allTasks.find((x) => x.id === dragId);
       if (t && t.status !== col) {
-        updateTask(dragId, { status: col });
+        await updateTask(dragId, { status: col });
         toast.success(`Moved to ${col}`);
       }
     }
     setDragId(null);
   };
+
+  if (isLoading) {
+    return (
+      <div>
+        <PageHeader title="Tasks" description="Loading…" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i} className="h-96 animate-pulse bg-secondary/50" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -57,18 +67,11 @@ function TasksPage() {
       />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        {COLUMNS.map(col => {
-          const list = tasks.filter(t => t.status === col);
+        {COLUMNS.map((col) => {
+          const list = allTasks.filter((t) => t.status === col);
           return (
-            <Card
-              key={col}
-              className="bg-secondary/30"
-              {...({} as Record<string, unknown>)}
-            >
-              <div
-                onDragOver={e => e.preventDefault()}
-                onDrop={() => onDrop(col)}
-              >
+            <Card key={col} className="bg-secondary/30" {...({} as Record<string, unknown>)}>
+              <div onDragOver={(e) => e.preventDefault()} onDrop={() => onDrop(col)}>
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="text-sm font-semibold">{col}</h3>
                   <span className="rounded-full bg-background px-1.5 py-0.5 text-[11px] tabular-nums text-muted-foreground">
@@ -79,20 +82,24 @@ function TasksPage() {
                   <EmptyHint>No tasks here.</EmptyHint>
                 ) : (
                   <ul className="space-y-2">
-                    {list.map(t => (
+                    {list.map((t) => (
                       <li
                         key={t.id}
                         draggable
                         onDragStart={() => setDragId(t.id)}
                         onDragEnd={() => setDragId(null)}
-                        className="rounded-lg border border-border bg-card p-3 transition hover:border-primary/40 cursor-grab active:cursor-grabbing"
+                        className="cursor-grab active:cursor-grabbing rounded-lg border border-border bg-card p-3 transition hover:border-primary/40"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="text-sm font-medium leading-5">{t.title}</div>
                           <StatusPill status={t.priority} />
                         </div>
                         <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                          <Link to="/clients/$id" params={{ id: t.clientId }} className="truncate hover:text-primary">
+                          <Link
+                            to="/clients/$id"
+                            params={{ id: t.client_id }}
+                            className="truncate hover:text-primary"
+                          >
                             {t.clientName}
                           </Link>
                           <span>Due {t.deadline}</span>
@@ -100,8 +107,8 @@ function TasksPage() {
                         <div className="mt-2 flex items-center justify-end gap-3">
                           {t.status !== "Done" && (
                             <button
-                              onClick={() => {
-                                updateTask(t.id, { status: "Done" });
+                              onClick={async () => {
+                                await updateTask(t.id, { status: "Done" });
                                 toast.success("Task completed");
                               }}
                               className="text-xs text-success hover:underline"
@@ -130,12 +137,7 @@ function TasksPage() {
         })}
       </div>
 
-      <TaskFormDialog
-        open={open}
-        onOpenChange={setOpen}
-        task={editing}
-        clients={clients}
-      />
+      <TaskFormDialog open={open} onOpenChange={setOpen} task={editing} clients={clients} />
     </div>
   );
 }

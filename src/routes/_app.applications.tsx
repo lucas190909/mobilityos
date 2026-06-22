@@ -2,8 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader, Avatar, StatusPill } from "@/components/ui-bits";
-import { setClientStage, useStore } from "@/lib/store";
-import { STAGES, type Stage, type Client } from "@/lib/mock-data";
+import { useData } from "@/lib/data-provider";
+import { STAGES, type Stage } from "@/lib/database";
 
 export const Route = createFileRoute("/_app/applications")({
   head: () => ({ meta: [{ title: "Applications — MobilityOS" }] }),
@@ -11,21 +11,34 @@ export const Route = createFileRoute("/_app/applications")({
 });
 
 function ApplicationsPage() {
-  const clients = useStore(s => s.clients);
+  const { clients, isLoading, setClientStage } = useData();
   const [dragId, setDragId] = useState<string | null>(null);
   const [overStage, setOverStage] = useState<Stage | null>(null);
 
-  const onDrop = (stage: Stage) => {
+  const onDrop = async (stage: Stage) => {
     if (dragId) {
-      const c = clients.find(x => x.id === dragId);
+      const c = clients.find((x) => x.id === dragId);
       if (c && c.status !== stage) {
-        setClientStage(dragId, stage);
+        await setClientStage(dragId, stage);
         toast.success(`${c.name} moved to ${stage}`);
       }
     }
     setDragId(null);
     setOverStage(null);
   };
+
+  if (isLoading) {
+    return (
+      <div>
+        <PageHeader title="Application Pipeline" description="Loading…" />
+        <div className="flex gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-96 w-72 animate-pulse rounded-xl bg-secondary/50" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -36,17 +49,17 @@ function ApplicationsPage() {
 
       <div className="-mx-1 overflow-x-auto pb-2">
         <div className="flex min-w-max gap-3 px-1">
-          {STAGES.map(stage => {
-            const items = clients.filter(c => c.status === stage);
+          {STAGES.map((stage) => {
+            const items = clients.filter((c) => c.status === stage);
             const isOver = overStage === stage;
             return (
               <div
                 key={stage}
-                onDragOver={e => {
+                onDragOver={(e) => {
                   e.preventDefault();
                   setOverStage(stage);
                 }}
-                onDragLeave={() => setOverStage(s => (s === stage ? null : s))}
+                onDragLeave={() => setOverStage((s) => (s === stage ? null : s))}
                 onDrop={() => onDrop(stage)}
                 className={
                   "flex w-72 shrink-0 flex-col rounded-xl border bg-secondary/30 transition " +
@@ -62,7 +75,7 @@ function ApplicationsPage() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 p-2">
-                  {items.map(c => (
+                  {items.map((c) => (
                     <ClientCard
                       key={c.id}
                       client={c}
@@ -93,7 +106,16 @@ function ClientCard({
   onDragStart,
   onDragEnd,
 }: {
-  client: Client;
+  client: {
+    id: string;
+    name: string;
+    photo: string;
+    destination?: string;
+    university?: string;
+    deadline?: string;
+    priority: string;
+    status: string;
+  };
   onDragStart: () => void;
   onDragEnd: () => void;
 }) {
@@ -113,7 +135,9 @@ function ClientCard({
           <Avatar src={c.photo} name={c.name} size={28} />
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-medium">{c.name}</div>
-            <div className="truncate text-[11px] text-muted-foreground">{c.destination} · {c.university}</div>
+            <div className="truncate text-[11px] text-muted-foreground">
+              {c.destination ?? ""} · {c.university ?? ""}
+            </div>
           </div>
         </div>
         <div className="mt-3 flex items-center justify-between text-[11px]">

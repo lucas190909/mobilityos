@@ -1,397 +1,384 @@
-import { createFileRoute, Link, notFound, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { ArrowLeft, CircleCheck as CheckCircle2, ChevronRight, Clock, FileText, GraduationCap, Mail, MapPin, MoveHorizontal as MoreHorizontal, Phone, Plus, Trash2, X } from "lucide-react";
 import {
-  CalendarDays,
-  ChevronLeft,
-  FileText,
-  GraduationCap,
-  Mail,
-  MapPin,
-  Phone,
-  Plus,
-  Sparkles,
-  Upload,
-} from "lucide-react";
-import { toast } from "sonner";
-import { Avatar, Card, EmptyHint, Progress, StatusPill } from "@/components/ui-bits";
+  Card,
+  EmptyHint,
+  PageHeader,
+  Progress,
+  SectionTitle,
+  StatusPill,
+} from "@/components/ui-bits";
 import {
   ClientFormDialog,
-  DeleteClientButton,
-  DeleteDocumentButton,
-  DeleteTaskButton,
-  DeleteUniversityButton,
+  ConfirmDialog,
   DocumentFormDialog,
   TaskFormDialog,
   UniversityFormDialog,
 } from "@/components/dialogs";
-import {
-  getState,
-  setClientStage,
-  setDocumentStatus,
-  updateClient,
-  useStore,
-} from "@/lib/store";
-import {
-  aiSuggestionsFor,
-  CONSULTANTS,
-  STAGES,
-  type Client,
-  type Document,
-  type Stage,
-  type Task,
-  type University,
-} from "@/lib/mock-data";
+import { useData } from "@/lib/data-provider";
+import type { Client, Document, Task, University } from "@/lib/database";
 
 export const Route = createFileRoute("/_app/clients/$id")({
-  head: ({ params }) => {
-    const c = getState().clients.find(x => x.id === params.id);
-    return { meta: [{ title: `${c?.name ?? "Client"} — MobilityOS` }] };
-  },
-  loader: ({ params }) => {
-    const c = getState().clients.find(x => x.id === params.id);
-    if (!c) throw notFound();
-    return { id: params.id };
-  },
+  head: () => ({ meta: [{ title: "Client Profile — MobilityOS" }] }),
   component: ClientProfile,
-  notFoundComponent: () => (
-    <div className="rounded-xl border border-dashed border-border p-12 text-center text-sm text-muted-foreground">
-      Client not found.
-    </div>
-  ),
 });
 
-const TABS = [
-  "Overview",
-  "Timeline",
-  "Documents",
-  "Universities",
-  "Tasks",
-  "Notes",
-  "Essays",
-  "Visa",
-  "Activity",
-] as const;
-type Tab = typeof TABS[number];
-
 function ClientProfile() {
-  const { id } = useParams({ from: "/_app/clients/$id" });
-  const client = useStore(s => s.clients.find(c => c.id === id));
-  const [tab, setTab] = useState<Tab>("Overview");
-  const [editOpen, setEditOpen] = useState(false);
+  const { id } = Route.useParams();
+  const navigate = useNavigate();
+  const { clients, isLoading, updateClient, deleteClient, setClientStage } = useData();
+  const client = clients.find((c) => c.id === id);
 
-  if (!client) {
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [docOpen, setDocOpen] = useState(false);
+  const [uniOpen, setUniOpen] = useState(false);
+  const [taskOpen, setTaskOpen] = useState(false);
+  const [editingDoc, setEditingDoc] = useState<Document | undefined>();
+  const [editingUni, setEditingUni] = useState<University | undefined>();
+  const [editingTask, setEditingTask] = useState<Task | undefined>();
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "documents" | "universities" | "tasks" | "timeline"
+  >("overview");
+
+  if (isLoading) {
     return (
-      <div className="rounded-xl border border-dashed border-border p-12 text-center text-sm text-muted-foreground">
-        Client not found.
-        <div className="mt-4">
-          <Link to="/clients" className="text-primary hover:underline">Back to clients</Link>
+      <div>
+        <PageHeader title="Client Profile" description="Loading…" />
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i} className="h-32 animate-pulse bg-secondary/50" />
+          ))}
         </div>
       </div>
     );
   }
 
-  const ai = aiSuggestionsFor(client);
+  if (!client) {
+    return (
+      <div>
+        <PageHeader title="Client Profile" description="Client not found." />
+        <EmptyHint>
+          This client does not exist.{" "}
+          <Link to="/clients" className="text-primary hover:underline">
+            Back to clients
+          </Link>
+        </EmptyHint>
+      </div>
+    );
+  }
+
+  const handleDelete = async () => {
+    const success = await deleteClient(client.id);
+    if (success) {
+      setDeleteOpen(false);
+      navigate({ to: "/clients" });
+    }
+  };
+
+  const handleStageChange = async (stage: string) => {
+    await setClientStage(client.id, stage as Client["status"]);
+  };
+
+  const tabs = [
+    { key: "overview" as const, label: "Overview" },
+    { key: "documents" as const, label: `Documents (${client.documents.length})` },
+    { key: "universities" as const, label: `Universities (${client.universities.length})` },
+    { key: "tasks" as const, label: `Tasks (${client.tasks.length})` },
+    { key: "timeline" as const, label: "Timeline" },
+  ];
 
   return (
     <div>
-      <Link to="/clients" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ChevronLeft className="h-4 w-4" /> Clients
-      </Link>
-
-      <Card>
-        <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <Avatar src={client.photo} name={client.name} size={64} />
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-semibold tracking-tight">{client.name}</h2>
-                <StatusPill status={client.status} />
-              </div>
-              <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> {client.nationality} → {client.destination}</span>
-                <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" /> {client.intake}</span>
-                <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" /> {client.email}</span>
-                <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" /> {client.phone}</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col gap-3 md:items-end">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setEditOpen(true)}
-                className="inline-flex h-8 items-center gap-1 rounded-md border border-border bg-background px-3 text-xs font-medium hover:bg-secondary"
-              >
-                Edit
-              </button>
-              <DeleteClientButton clientId={client.id} onDeleted={() => window.history.back()} />
-            </div>
-            <div className="flex items-center gap-3 text-xs">
-              <span className="text-muted-foreground">Stage:</span>
-              <select
-                value={client.status}
-                onChange={e => {
-                  setClientStage(client.id, e.target.value as Stage);
-                  toast.success("Stage updated");
-                }}
-                className="h-7 rounded-md border border-input bg-background px-2 text-xs outline-none focus:border-ring"
-              >
-                {STAGES.map(s => <option key={s}>{s}</option>)}
-              </select>
-            </div>
-            <div className="flex items-center gap-3 text-xs">
-              <span className="text-muted-foreground">Consultant:</span>
-              <select
-                value={client.consultant}
-                onChange={e => {
-                  updateClient(client.id, { consultant: e.target.value });
-                  toast.success("Consultant updated");
-                }}
-                className="h-7 rounded-md border border-input bg-background px-2 text-xs outline-none focus:border-ring"
-              >
-                {CONSULTANTS.map(s => <option key={s}>{s}</option>)}
-              </select>
-            </div>
-            <div className="w-56">
-              <div className="mb-1 flex justify-between text-xs">
-                <span className="text-muted-foreground">Progress</span>
-                <span className="tabular-nums">{client.progress}%</span>
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={client.progress}
-                onChange={e => updateClient(client.id, { progress: Number(e.target.value) })}
-                className="w-full accent-[color:var(--color-primary)]"
-              />
-              <Progress value={client.progress} />
-            </div>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate({ to: "/clients" })}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-secondary"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">{client.name}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {client.nationality} → {client.destination} · {client.intake}
+            </p>
           </div>
         </div>
-
-        <div className="mt-6 -mb-5 flex gap-1 overflow-x-auto border-t border-border pt-4">
-          {TABS.map(t => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={
-                "rounded-md px-3 py-1.5 text-sm transition " +
-                (tab === t
-                  ? "bg-secondary font-medium text-foreground"
-                  : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground")
-              }
-            >
-              {t}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setEditOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground hover:bg-secondary"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => setDeleteOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-sm font-medium text-destructive hover:bg-destructive/10"
+          >
+            <Trash2 className="h-4 w-4" /> Delete
+          </button>
         </div>
-      </Card>
-
-      <div className="mt-6">
-        {tab === "Overview" && <OverviewTab client={client} ai={ai} />}
-        {tab === "Timeline" && <TimelineTab client={client} />}
-        {tab === "Documents" && <DocumentsTab client={client} />}
-        {tab === "Universities" && <UniversitiesTab client={client} />}
-        {tab === "Tasks" && <TasksTab client={client} />}
-        {tab === "Notes" && <NotesTab client={client} />}
-        {tab === "Essays" && (
-          <Card>
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Statement of Purpose</h3>
-              <button
-                onClick={() => {
-                  updateClient(client.id, { essayReviewed: !client.essayReviewed });
-                  toast.success(client.essayReviewed ? "Marked unreviewed" : "Marked reviewed");
-                }}
-                className="inline-flex h-8 items-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground hover:opacity-90"
-              >
-                {client.essayReviewed ? "Mark unreviewed" : "Mark reviewed"}
-              </button>
-            </div>
-            <p className="mt-3 text-sm text-muted-foreground">
-              {client.essayReviewed
-                ? "Reviewed and approved by the consultant team."
-                : "Draft uploaded by client. Awaiting consultant review."}
-            </p>
-          </Card>
-        )}
-        {tab === "Visa" && (
-          <Card>
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Visa Status</h3>
-              <select
-                value={client.visaStatus}
-                onChange={e => {
-                  updateClient(client.id, { visaStatus: e.target.value as Client["visaStatus"] });
-                  toast.success("Visa status updated");
-                }}
-                className="h-8 rounded-md border border-input bg-background px-2 text-xs outline-none focus:border-ring"
-              >
-                {["Not Started", "In Progress", "Approved", "Denied"].map(s => <option key={s}>{s}</option>)}
-              </select>
-            </div>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Track interview dates, biometrics, and final approval here.
-            </p>
-          </Card>
-        )}
-        {tab === "Activity" && <TimelineTab client={client} />}
       </div>
 
-      <ClientFormDialog open={editOpen} onOpenChange={setEditOpen} client={client} />
-    </div>
-  );
-}
+      <div className="mb-6 flex flex-wrap gap-2">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setActiveTab(t.key)}
+            className={
+              "rounded-md px-3 py-1.5 text-sm font-medium transition " +
+              (activeTab === t.key
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary text-secondary-foreground hover:bg-secondary/80")
+            }
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
 
-function OverviewTab({ client, ai }: { client: Client; ai: string[] }) {
-  const missing = client.documents.filter(d => d.status === "Missing");
-  const nextTasks = client.tasks.filter(t => t.status !== "Done").slice(0, 3);
-  return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-      <Card className="lg:col-span-2">
-        <h3 className="mb-3 text-sm font-semibold">Journey Overview</h3>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <Stat label="Stage" value={client.status} />
-          <Stat label="Destination" value={client.destination} />
-          <Stat label="Intake" value={client.intake} />
-          <Stat label="Priority" value={client.priority} />
-        </div>
-
-        <div className="mt-6">
-          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Upcoming Tasks</h4>
-          {nextTasks.length === 0 ? (
-            <EmptyHint>No pending tasks.</EmptyHint>
-          ) : (
-            <ul className="divide-y divide-border rounded-lg border border-border">
-              {nextTasks.map(t => (
-                <li key={t.id} className="flex items-center justify-between px-4 py-3">
-                  <div>
-                    <div className="text-sm">{t.title}</div>
-                    <div className="text-xs text-muted-foreground">Due {t.deadline}</div>
-                  </div>
-                  <StatusPill status={t.priority} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </Card>
-
-      <Card className="bg-gradient-to-br from-primary/[0.04] to-transparent">
-        <div className="mb-3 flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/15 text-primary">
-            <Sparkles className="h-3.5 w-3.5" />
-          </span>
-          <h3 className="text-sm font-semibold">AI Insights</h3>
-        </div>
-        <ul className="space-y-2.5">
-          {ai.map((s, i) => (
-            <li key={i} className="rounded-lg border border-border bg-background/60 p-3 text-sm leading-5">
-              {s}
-            </li>
-          ))}
-          {ai.length === 0 && (
-            <li className="text-sm text-muted-foreground">No issues detected. Everything on track.</li>
-          )}
-        </ul>
-
-        {missing.length > 0 && (
-          <>
-            <h4 className="mt-5 mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Missing Documents</h4>
-            <ul className="space-y-1.5">
-              {missing.map(m => (
-                <li key={m.id} className="flex items-center justify-between text-sm">
-                  <span>{m.name}</span>
-                  <StatusPill status={m.status} />
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </Card>
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-border bg-secondary/30 p-3">
-      <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="mt-1 text-sm font-medium">{value}</div>
-    </div>
-  );
-}
-
-function TimelineTab({ client }: { client: Client }) {
-  return (
-    <Card>
-      {client.timeline.length === 0 ? (
-        <EmptyHint>No activity yet.</EmptyHint>
-      ) : (
-        <ol className="relative space-y-6 border-l border-border pl-6">
-          {client.timeline
-            .slice()
-            .sort((a, b) => b.date.localeCompare(a.date))
-            .map(e => (
-              <li key={e.id} className="relative">
-                <span className="absolute -left-[26px] top-1 flex h-3 w-3 items-center justify-center rounded-full bg-primary ring-4 ring-background" />
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{e.title}</span>
-                  <StatusPill status={e.type} />
-                </div>
-                <div className="text-xs text-muted-foreground">{e.date}</div>
-              </li>
-            ))}
-        </ol>
+      {activeTab === "overview" && (
+        <OverviewTab client={client} onStageChange={handleStageChange} />
       )}
-    </Card>
+      {activeTab === "documents" && (
+        <DocumentsTab
+          client={client}
+          onAdd={() => {
+            setEditingDoc(undefined);
+            setDocOpen(true);
+          }}
+          onEdit={(d) => {
+            setEditingDoc(d);
+            setDocOpen(true);
+          }}
+        />
+      )}
+      {activeTab === "universities" && (
+        <UniversitiesTab
+          client={client}
+          onAdd={() => {
+            setEditingUni(undefined);
+            setUniOpen(true);
+          }}
+          onEdit={(u) => {
+            setEditingUni(u);
+            setUniOpen(true);
+          }}
+        />
+      )}
+      {activeTab === "tasks" && (
+        <TasksTab
+          client={client}
+          onAdd={() => {
+            setEditingTask(undefined);
+            setTaskOpen(true);
+          }}
+          onEdit={(t) => {
+            setEditingTask(t);
+            setTaskOpen(true);
+          }}
+        />
+      )}
+      {activeTab === "timeline" && <TimelineTab client={client} />}
+
+      <ClientFormDialog open={editOpen} onOpenChange={setEditOpen} client={client} />
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Delete this client?"
+        description="This will remove the client and all related documents, tasks and universities. This action cannot be undone."
+        onConfirm={handleDelete}
+      />
+      <DocumentFormDialog
+        open={docOpen}
+        onOpenChange={setDocOpen}
+        clientId={client.id}
+        document={editingDoc}
+      />
+      <UniversityFormDialog
+        open={uniOpen}
+        onOpenChange={setUniOpen}
+        clientId={client.id}
+        university={editingUni}
+      />
+      <TaskFormDialog
+        open={taskOpen}
+        onOpenChange={setTaskOpen}
+        clientId={client.id}
+        task={editingTask}
+        clients={clients}
+      />
+    </div>
   );
 }
 
-function DocumentsTab({ client }: { client: Client }) {
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Document | undefined>();
+function OverviewTab({
+  client,
+  onStageChange,
+}: {
+  client: Client;
+  onStageChange: (stage: string) => void;
+}) {
+  const stages = [
+    "Lead",
+    "Consultation",
+    "Documents",
+    "Application",
+    "Offer Received",
+    "Visa",
+    "Travel Preparation",
+    "Completed",
+  ];
+  const currentIndex = stages.indexOf(client.status);
+
   return (
-    <Card className="p-0">
-      <div className="flex items-center justify-between border-b border-border px-5 py-3">
-        <h3 className="text-sm font-semibold">Required Documents</h3>
+    <div className="space-y-4">
+      <Card>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <div className="text-xs text-muted-foreground">Email</div>
+            <div className="mt-1 flex items-center gap-1.5 text-sm">
+              <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+              <a href={`mailto:${client.email}`} className="text-primary hover:underline">
+                {client.email}
+              </a>
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-muted-foreground">Phone</div>
+            <div className="mt-1 flex items-center gap-1.5 text-sm">
+              <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+              {client.phone ?? "—"}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-muted-foreground">Destination</div>
+            <div className="mt-1 flex items-center gap-1.5 text-sm">
+              <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+              {client.destination ?? "—"}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-muted-foreground">Consultant</div>
+            <div className="mt-1 text-sm font-medium">{client.consultant ?? "—"}</div>
+          </div>
+          <div>
+            <div className="text-xs text-muted-foreground">Priority</div>
+            <div className="mt-1">
+              <StatusPill status={client.priority} />
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-muted-foreground">Deadline</div>
+            <div className="mt-1 flex items-center gap-1.5 text-sm">
+              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+              {client.deadline ?? "TBD"}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-muted-foreground">University</div>
+            <div className="mt-1 text-sm">{client.university ?? "—"}</div>
+          </div>
+          <div>
+            <div className="text-xs text-muted-foreground">Visa Status</div>
+            <div className="mt-1">
+              <StatusPill status={client.visa_status} />
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+        <SectionTitle>Pipeline Progress</SectionTitle>
+        <div className="mt-4">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+            <span>Progress</span>
+            <span>{client.progress}%</span>
+          </div>
+          <Progress value={client.progress} />
+        </div>
+        <div className="mt-6 flex flex-wrap items-center gap-2">
+          {stages.map((stage, i) => {
+            const isCurrent = i === currentIndex;
+            const isPast = i < currentIndex;
+            return (
+              <button
+                key={stage}
+                onClick={() => onStageChange(stage)}
+                className={
+                  "flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition " +
+                  (isCurrent
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : isPast
+                      ? "bg-success/10 text-success border-success/30"
+                      : "bg-secondary text-secondary-foreground border-border hover:bg-secondary/80")
+                }
+              >
+                {isPast && <CheckCircle2 className="h-3 w-3" />}
+                {stage}
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+
+      {client.notes && (
+        <Card>
+          <SectionTitle>Notes</SectionTitle>
+          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{client.notes}</p>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function DocumentsTab({
+  client,
+  onAdd,
+  onEdit,
+}: {
+  client: Client;
+  onAdd: () => void;
+  onEdit: (d: Document) => void;
+}) {
+  const { setDocumentStatus, deleteDocument } = useData();
+
+  return (
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-sm font-semibold tracking-tight">Documents</h2>
         <button
-          onClick={() => {
-            setEditing(undefined);
-            setOpen(true);
-          }}
-          className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
+          onClick={onAdd}
+          className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
         >
-          <Upload className="h-3.5 w-3.5" /> Upload
+          <Plus className="h-4 w-4" /> Add Document
         </button>
       </div>
       {client.documents.length === 0 ? (
-        <div className="p-6">
-          <EmptyHint>No documents yet. Upload one to get started.</EmptyHint>
-        </div>
+        <EmptyHint>No documents yet.</EmptyHint>
       ) : (
-        <ul className="divide-y divide-border">
-          {client.documents.map(d => (
-            <li key={d.id} className="flex items-center justify-between gap-3 px-5 py-3">
+        <div className="space-y-2">
+          {client.documents.map((d) => (
+            <Card key={d.id} className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-md bg-secondary text-muted-foreground">
+                <span className="flex h-8 w-8 items-center justify-center rounded-md bg-secondary text-muted-foreground">
                   <FileText className="h-4 w-4" />
                 </span>
                 <div>
                   <div className="text-sm font-medium">{d.name}</div>
                   <div className="text-xs text-muted-foreground">
-                    {d.uploadedAt ? `Uploaded ${d.uploadedAt}` : "Not uploaded"}
-                    {d.expiresAt ? ` · Expires ${d.expiresAt}` : ""}
+                    {d.uploaded_at ? `Uploaded ${d.uploaded_at}` : "Not uploaded"}
+                    {d.expires_at && ` · Expires ${d.expires_at}`}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <StatusPill status={d.status} />
                 {d.status !== "Approved" && (
                   <button
-                    onClick={() => {
-                      setDocumentStatus(client.id, d.id, "Approved");
-                      toast.success("Document approved");
-                    }}
+                    onClick={async () => await setDocumentStatus(d.id, "Approved")}
                     className="text-xs text-success hover:underline"
                   >
                     Approve
@@ -399,191 +386,183 @@ function DocumentsTab({ client }: { client: Client }) {
                 )}
                 {d.status !== "Rejected" && (
                   <button
-                    onClick={() => {
-                      setDocumentStatus(client.id, d.id, "Rejected");
-                      toast.success("Document rejected");
-                    }}
+                    onClick={async () => await setDocumentStatus(d.id, "Rejected")}
                     className="text-xs text-destructive hover:underline"
                   >
                     Reject
                   </button>
                 )}
-                <button
-                  onClick={() => {
-                    setEditing(d);
-                    setOpen(true);
-                  }}
-                  className="text-xs text-primary hover:underline"
-                >
+                <button onClick={() => onEdit(d)} className="text-xs text-primary hover:underline">
                   Edit
                 </button>
-                <DeleteDocumentButton clientId={client.id} docId={d.id} />
-                <StatusPill status={d.status} />
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-      <DocumentFormDialog
-        open={open}
-        onOpenChange={setOpen}
-        clientId={client.id}
-        document={editing}
-      />
-    </Card>
-  );
-}
-
-function UniversitiesTab({ client }: { client: Client }) {
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<University | undefined>();
-  return (
-    <div>
-      <div className="mb-3 flex justify-end">
-        <button
-          onClick={() => {
-            setEditing(undefined);
-            setOpen(true);
-          }}
-          className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
-        >
-          <Plus className="h-3.5 w-3.5" /> Add University
-        </button>
-      </div>
-      {client.universities.length === 0 ? (
-        <EmptyHint>No universities assigned yet.</EmptyHint>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {client.universities.map(u => (
-            <Card key={u.id}>
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-md bg-accent text-accent-foreground">
-                    <GraduationCap className="h-4 w-4" />
-                  </span>
-                  <div>
-                    <div className="font-medium">{u.name}</div>
-                    <div className="text-xs text-muted-foreground">{u.program} · {u.country}</div>
-                  </div>
-                </div>
-                <StatusPill status={u.status} />
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
-                <div>
-                  <div className="text-muted-foreground">Deadline</div>
-                  <div className="mt-0.5 font-medium">{u.deadline}</div>
-                </div>
-                <div>
-                  <div className="text-muted-foreground">Scholarship</div>
-                  <div className="mt-0.5 font-medium">{u.scholarship ?? "—"}</div>
-                </div>
-              </div>
-              <div className="mt-3 flex items-center justify-end gap-3">
                 <button
-                  onClick={() => {
-                    setEditing(u);
-                    setOpen(true);
-                  }}
-                  className="text-xs text-primary hover:underline"
+                  onClick={async () => await deleteDocument(d.id)}
+                  className="text-xs text-destructive hover:underline"
                 >
-                  Edit
+                  Delete
                 </button>
-                <DeleteUniversityButton clientId={client.id} uniId={u.id} />
               </div>
             </Card>
           ))}
         </div>
       )}
-      <UniversityFormDialog
-        open={open}
-        onOpenChange={setOpen}
-        clientId={client.id}
-        university={editing}
-      />
     </div>
   );
 }
 
-function TasksTab({ client }: { client: Client }) {
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Task | undefined>();
-  const clients = useStore(s => s.clients);
+function UniversitiesTab({
+  client,
+  onAdd,
+  onEdit,
+}: {
+  client: Client;
+  onAdd: () => void;
+  onEdit: (u: University) => void;
+}) {
+  const { deleteUniversity } = useData();
+
   return (
     <div>
-      <div className="mb-3 flex justify-end">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-sm font-semibold tracking-tight">Universities</h2>
         <button
-          onClick={() => {
-            setEditing(undefined);
-            setOpen(true);
-          }}
-          className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
+          onClick={onAdd}
+          className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
         >
-          <Plus className="h-3.5 w-3.5" /> Add Task
+          <Plus className="h-4 w-4" /> Add University
         </button>
       </div>
-      <Card className="p-0">
-        {client.tasks.length === 0 ? (
-          <div className="p-6">
-            <EmptyHint>No tasks yet.</EmptyHint>
-          </div>
-        ) : (
-          <ul className="divide-y divide-border">
-            {client.tasks.map(t => (
-              <li key={t.id} className="flex items-center justify-between gap-3 px-5 py-3">
+      {client.universities.length === 0 ? (
+        <EmptyHint>No universities yet.</EmptyHint>
+      ) : (
+        <div className="space-y-2">
+          {client.universities.map((u) => (
+            <Card key={u.id} className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-accent-foreground">
+                  <GraduationCap className="h-4 w-4" />
+                </span>
                 <div>
-                  <div className="text-sm font-medium">{t.title}</div>
-                  <div className="text-xs text-muted-foreground">Assigned to {t.consultant} · Due {t.deadline}</div>
+                  <div className="text-sm font-medium">{u.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {u.program} · {u.country} · Deadline {u.deadline}
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => {
-                      setEditing(t);
-                      setOpen(true);
-                    }}
-                    className="text-xs text-primary hover:underline"
-                  >
-                    Edit
-                  </button>
-                  <DeleteTaskButton taskId={t.id} />
-                  <StatusPill status={t.priority} />
-                  <StatusPill status={t.status} />
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
-      <TaskFormDialog
-        open={open}
-        onOpenChange={setOpen}
-        clientId={client.id}
-        task={editing}
-        clients={clients}
-      />
+              </div>
+              <div className="flex items-center gap-2">
+                <StatusPill status={u.status} />
+                {u.scholarship && (
+                  <span className="text-xs text-muted-foreground">{u.scholarship}</span>
+                )}
+                <button onClick={() => onEdit(u)} className="text-xs text-primary hover:underline">
+                  Edit
+                </button>
+                <button
+                  onClick={async () => await deleteUniversity(u.id)}
+                  className="text-xs text-destructive hover:underline"
+                >
+                  Delete
+                </button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-function NotesTab({ client }: { client: Client }) {
-  const [val, setVal] = useState(client.notes);
+function TasksTab({
+  client,
+  onAdd,
+  onEdit,
+}: {
+  client: Client;
+  onAdd: () => void;
+  onEdit: (t: Task) => void;
+}) {
+  const { updateTask, deleteTask } = useData();
+
   return (
-    <Card>
-      <textarea
-        value={val}
-        onChange={e => setVal(e.target.value)}
-        className="min-h-[180px] w-full rounded-md border border-input bg-background p-3 text-sm outline-none focus:border-ring focus:ring-1 focus:ring-ring"
-      />
-      <div className="mt-3 flex justify-end">
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-sm font-semibold tracking-tight">Tasks</h2>
         <button
-          onClick={() => {
-            updateClient(client.id, { notes: val });
-            toast.success("Notes saved");
-          }}
-          className="inline-flex h-9 items-center gap-1.5 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90"
+          onClick={onAdd}
+          className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
         >
-          Save notes
+          <Plus className="h-4 w-4" /> Add Task
         </button>
       </div>
-    </Card>
+      {client.tasks.length === 0 ? (
+        <EmptyHint>No tasks yet.</EmptyHint>
+      ) : (
+        <div className="space-y-2">
+          {client.tasks.map((t) => (
+            <Card key={t.id} className="flex items-center justify-between gap-4">
+              <div>
+                <div className="text-sm font-medium">{t.title}</div>
+                <div className="text-xs text-muted-foreground">
+                  {t.consultant} · Due {t.deadline}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <StatusPill status={t.priority} />
+                <StatusPill status={t.status} />
+                {t.status !== "Done" && (
+                  <button
+                    onClick={async () => await updateTask(t.id, { status: "Done" })}
+                    className="text-xs text-success hover:underline"
+                  >
+                    Complete
+                  </button>
+                )}
+                <button onClick={() => onEdit(t)} className="text-xs text-primary hover:underline">
+                  Edit
+                </button>
+                <button
+                  onClick={async () => await deleteTask(t.id)}
+                  className="text-xs text-destructive hover:underline"
+                >
+                  Delete
+                </button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TimelineTab({ client }: { client: Client }) {
+  return (
+    <div>
+      <SectionTitle>Timeline</SectionTitle>
+      {client.timeline.length === 0 ? (
+        <EmptyHint>No timeline events yet.</EmptyHint>
+      ) : (
+        <div className="relative space-y-4 pl-6">
+          <div className="absolute left-2 top-0 bottom-0 w-px bg-border" />
+          {client.timeline.map((e) => (
+            <div key={e.id} className="relative">
+              <div className="absolute -left-4 top-1.5 h-2 w-2 rounded-full bg-primary ring-2 ring-background" />
+              <Card className="py-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium">{e.title}</div>
+                    <div className="text-xs text-muted-foreground">{e.date}</div>
+                  </div>
+                  <StatusPill status={e.type} />
+                </div>
+                {e.description && (
+                  <p className="mt-2 text-xs text-muted-foreground">{e.description}</p>
+                )}
+              </Card>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

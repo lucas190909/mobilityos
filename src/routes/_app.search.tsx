@@ -1,8 +1,9 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { FileText, GraduationCap, Search as SearchIcon, Users, CheckSquare } from "lucide-react";
+import { FileText, GraduationCap, Search as SearchIcon, Users, SquareCheck as CheckSquare } from "lucide-react";
 import { Card, EmptyHint, PageHeader } from "@/components/ui-bits";
-import { globalSearch, useStore } from "@/lib/store";
+import { useData } from "@/lib/data-provider";
+import { globalSearch } from "@/lib/database";
 
 export const Route = createFileRoute("/_app/search")({
   head: () => ({ meta: [{ title: "Search — MobilityOS" }] }),
@@ -21,20 +22,34 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
 
 function SearchPage() {
   const { q } = Route.useSearch();
-  const navigate = useNavigate({ from: Route.fullPath });
-  const results = useStore(s => globalSearch(s, q));
+  const navigate = Route.useNavigate();
+  const { clients, isLoading } = useData();
+
+  const results = useMemo(() => globalSearch(clients, q), [clients, q]);
 
   const grouped = useMemo(() => {
     const map: Record<string, typeof results> = {};
-    results.forEach(r => {
+    results.forEach((r) => {
       (map[r.type] ||= []).push(r);
     });
     return map;
   }, [results]);
 
+  if (isLoading) {
+    return (
+      <div>
+        <PageHeader title="Search" description="Loading…" />
+        <Card className="h-48 animate-pulse bg-secondary/50" />
+      </div>
+    );
+  }
+
   return (
     <div>
-      <PageHeader title="Search" description="Search across clients, tasks, universities and documents." />
+      <PageHeader
+        title="Search"
+        description="Search across clients, tasks, universities and documents."
+      />
 
       <Card className="mb-4 p-3">
         <div className="relative">
@@ -42,7 +57,7 @@ function SearchPage() {
           <input
             autoFocus
             value={q}
-            onChange={e => navigate({ search: { q: e.target.value } })}
+            onChange={(e) => navigate({ search: { q: e.target.value } })}
             placeholder="Type to search…"
             className="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm outline-none focus:border-ring focus:ring-1 focus:ring-ring"
           />
@@ -63,7 +78,7 @@ function SearchPage() {
                   {type}s ({items.length})
                 </div>
                 <ul className="divide-y divide-border">
-                  {items.map(r => (
+                  {items.map((r) => (
                     <li key={r.type + r.id}>
                       <Link
                         to="/clients/$id"

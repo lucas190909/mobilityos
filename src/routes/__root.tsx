@@ -12,6 +12,7 @@ import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { DataProvider } from "../lib/data-provider";
 
 function NotFoundComponent() {
   return (
@@ -79,23 +80,46 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "MobilityOS — Operating System for Mobility Agencies" },
-      { name: "description", content: "MobilityOS helps education consultants, study abroad and visa agencies manage every client journey end-to-end." },
+      {
+        name: "description",
+        content:
+          "MobilityOS helps education consultants, study abroad and visa agencies manage every client journey end-to-end.",
+      },
       { name: "author", content: "MobilityOS" },
       { property: "og:title", content: "MobilityOS — Operating System for Mobility Agencies" },
-      { property: "og:description", content: "MobilityOS helps education consultants, study abroad and visa agencies manage every client journey end-to-end." },
+      {
+        property: "og:description",
+        content:
+          "MobilityOS helps education consultants, study abroad and visa agencies manage every client journey end-to-end.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@MobilityOS" },
       { name: "twitter:title", content: "MobilityOS — Operating System for Mobility Agencies" },
-      { name: "twitter:description", content: "MobilityOS helps education consultants, study abroad and visa agencies manage every client journey end-to-end." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/0587b5e2-6cfb-4d14-a6c3-8df9e199ab56/id-preview-6ccc9b79--5af9d421-eafd-4e65-bb8a-9af51debb40c.lovable.app-1782141046566.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/0587b5e2-6cfb-4d14-a6c3-8df9e199ab56/id-preview-6ccc9b79--5af9d421-eafd-4e65-bb8a-9af51debb40c.lovable.app-1782141046566.png" },
+      {
+        name: "twitter:description",
+        content:
+          "MobilityOS helps education consultants, study abroad and visa agencies manage every client journey end-to-end.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/0587b5e2-6cfb-4d14-a6c3-8df9e199ab56/id-preview-6ccc9b79--5af9d421-eafd-4e65-bb8a-9af51debb40c.lovable.app-1782141046566.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/0587b5e2-6cfb-4d14-a6c3-8df9e199ab56/id-preview-6ccc9b79--5af9d421-eafd-4e65-bb8a-9af51debb40c.lovable.app-1782141046566.png",
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -123,9 +147,11 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
-      <Toaster richColors position="top-right" />
+      <DataProvider>
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <Outlet />
+        <Toaster richColors position="top-right" />
+      </DataProvider>
     </QueryClientProvider>
   );
 }

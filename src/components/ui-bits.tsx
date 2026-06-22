@@ -13,22 +13,14 @@ export function PageHeader({
     <div className="mb-6 flex items-start justify-between gap-4">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-        {description && (
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-        )}
+        {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>
   );
 }
 
-export function Card({
-  children,
-  className = "",
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
+export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <div
       className={
@@ -85,7 +77,7 @@ export function StatusPill({ status }: { status: string }) {
 export function Avatar({ src, name, size = 32 }: { src?: string; name: string; size?: number }) {
   const initials = name
     .split(" ")
-    .map(n => n[0])
+    .map((n) => n[0])
     .slice(0, 2)
     .join("")
     .toUpperCase();
