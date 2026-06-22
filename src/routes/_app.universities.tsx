@@ -1,9 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ListFilter as Filter, GraduationCap, Plus, X } from "lucide-react";
+import { ListFilter as Filter, GraduationCap, Plus, X, MapPin, CalendarDays, Pencil, Trash2, CircleCheck as CheckCircle2, TriangleAlert as AlertTriangle } from "lucide-react";
 import { Card, EmptyHint, PageHeader, StatusPill } from "@/components/ui-bits";
 import { useData } from "@/lib/data-provider";
-import { UniversityFormDialog, DeleteUniversityButton } from "@/components/dialogs";
+import { UniversityFormDialog, ConfirmDialog } from "@/components/dialogs";
 import { DESTINATIONS } from "@/lib/database";
 import type { University } from "@/lib/database";
 
@@ -20,12 +20,14 @@ export const Route = createFileRoute("/_app/universities")({
 });
 
 function UniversitiesPage() {
-  const { clients, isLoading } = useData();
+  const { clients, isLoading, deleteUniversity } = useData();
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
   const [showFilters, setShowFilters] = useState(false);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<University | undefined>();
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const rows = clients.flatMap((c) =>
     c.universities.map((u) => ({ ...u, client: c.name, clientId: c.id })),
@@ -40,13 +42,9 @@ function UniversitiesPage() {
     return true;
   });
 
-  const upd = (patch: Partial<typeof search>) =>
-    navigate({ search: (prev: typeof search) => ({ ...prev, ...patch }) });
-
-  const openNew = () => {
-    setEditing(undefined);
-    setOpen(true);
-  };
+  const acceptedCount = rows.filter((r) => r.status === "Accepted").length;
+  const appliedCount = rows.filter((r) => r.status === "Applied").length;
+  const waitingCount = rows.filter((r) => r.status === "Waiting").length;
 
   if (isLoading) {
     return (
@@ -70,41 +68,105 @@ function UniversitiesPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowFilters((v) => !v)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground hover:bg-secondary"
+              className={
+                "inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium transition " +
+                (showFilters
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-background text-foreground hover:bg-secondary")
+              }
             >
               <Filter className="h-4 w-4" /> Filters
-            </button>
-            <button
-              onClick={openNew}
-              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
-            >
-              <Plus className="h-4 w-4" /> Add
             </button>
           </div>
         }
       />
 
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-4 mb-4">
+        <Card className="flex items-center gap-3 transition hover:shadow-sm">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/15 text-success">
+            <CheckCircle2 className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-2xl font-semibold">{acceptedCount}</div>
+            <div className="text-xs text-muted-foreground">Accepted</div>
+          </div>
+        </Card>
+        <Card className="flex items-center gap-3 transition hover:shadow-sm">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <GraduationCap className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-2xl font-semibold">{appliedCount}</div>
+            <div className="text-xs text-muted-foreground">Applied</div>
+          </div>
+        </Card>
+        <Card className="flex items-center gap-3 transition hover:shadow-sm">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/15 text-warning-foreground">
+            <AlertTriangle className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-2xl font-semibold">{waitingCount}</div>
+            <div className="text-xs text-muted-foreground">Waiting</div>
+          </div>
+        </Card>
+      </div>
+
       <Card className="mb-4 p-3">
         <input
           value={search.q}
-          onChange={(e) => upd({ q: e.target.value })}
+          onChange={(e) =>
+            navigate({ search: (prev: typeof search) => ({ ...prev, q: e.target.value }) })
+          }
           placeholder="Search university, program, country…"
-          className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:border-ring focus:ring-1 focus:ring-ring"
+          className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition focus:border-ring focus:ring-1 focus:ring-ring"
         />
         {showFilters && (
-          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <FilterSelect
-              label="Status"
-              value={search.status}
-              options={[...STATUSES]}
-              onChange={(v) => upd({ status: v })}
-            />
-            <FilterSelect
-              label="Country"
-              value={search.country}
-              options={DESTINATIONS}
-              onChange={(v) => upd({ country: v })}
-            />
+          <div className="mt-3 flex flex-wrap gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Status:</span>
+              <select
+                value={search.status}
+                onChange={(e) =>
+                  navigate({
+                    search: (prev: typeof search) => ({ ...prev, status: e.target.value }),
+                  })
+                }
+                className="h-8 rounded-md border border-input bg-background px-2 text-sm outline-none"
+              >
+                <option value="">All</option>
+                {STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Country:</span>
+              <select
+                value={search.country}
+                onChange={(e) =>
+                  navigate({
+                    search: (prev: typeof search) => ({ ...prev, country: e.target.value }),
+                  })
+                }
+                className="h-8 rounded-md border border-input bg-background px-2 text-sm outline-none"
+              >
+                <option value="">All</option>
+                {DESTINATIONS.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={() => navigate({ search: { q: "", status: "", country: "" } })}
+              className="text-xs text-muted-foreground hover:text-foreground transition"
+            >
+              Clear filters
+            </button>
           </div>
         )}
       </Card>
@@ -112,7 +174,7 @@ function UniversitiesPage() {
       <Card className="p-0">
         {filtered.length === 0 ? (
           <div className="p-6">
-            <EmptyHint>No universities found. Add one from a client profile.</EmptyHint>
+            <EmptyHint>No universities found.</EmptyHint>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -124,7 +186,6 @@ function UniversitiesPage() {
                   <th className="px-5 py-3 text-left font-medium">Country</th>
                   <th className="px-5 py-3 text-left font-medium">Client</th>
                   <th className="px-5 py-3 text-left font-medium">Deadline</th>
-                  <th className="px-5 py-3 text-left font-medium">Scholarship</th>
                   <th className="px-5 py-3 text-left font-medium">Status</th>
                   <th className="px-5 py-3 text-right font-medium">Actions</th>
                 </tr>
@@ -137,40 +198,59 @@ function UniversitiesPage() {
                   >
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-accent-foreground">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground">
                           <GraduationCap className="h-4 w-4" />
                         </span>
                         <span className="font-medium">{r.name}</span>
                       </div>
                     </td>
                     <td className="px-5 py-3 text-muted-foreground">{r.program}</td>
-                    <td className="px-5 py-3">{r.country}</td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-1 text-xs">
+                        <MapPin className="h-3 w-3" />
+                        {r.country}
+                      </div>
+                    </td>
                     <td className="px-5 py-3">
                       <Link
                         to="/clients/$id"
                         params={{ id: r.clientId }}
-                        className="text-primary hover:underline"
+                        className="text-primary hover:underline transition"
                       >
                         {r.client}
                       </Link>
                     </td>
-                    <td className="px-5 py-3 text-muted-foreground">{r.deadline}</td>
-                    <td className="px-5 py-3 text-muted-foreground">{r.scholarship ?? "—"}</td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <CalendarDays className="h-3 w-3" />
+                        {r.deadline}
+                      </div>
+                    </td>
                     <td className="px-5 py-3">
                       <StatusPill status={r.status} />
                     </td>
                     <td className="px-5 py-3">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => {
                             setEditing(r);
                             setOpen(true);
                           }}
-                          className="text-xs text-primary hover:underline"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition"
+                          title="Edit"
                         >
-                          Edit
+                          <Pencil className="h-3.5 w-3.5" />
                         </button>
-                        <DeleteUniversityButton uniId={r.id} />
+                        <button
+                          onClick={() => {
+                            setDeleteId(r.id);
+                            setDeleteOpen(true);
+                          }}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-destructive hover:bg-destructive/10 transition"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -182,48 +262,17 @@ function UniversitiesPage() {
       </Card>
 
       <UniversityFormDialog open={open} onOpenChange={setOpen} clientId="" university={editing} />
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Remove this university?"
+        onConfirm={async () => {
+          if (deleteId) {
+            await deleteUniversity(deleteId);
+            setDeleteOpen(false);
+          }
+        }}
+      />
     </div>
-  );
-}
-
-function FilterSelect({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: string[];
-}) {
-  return (
-    <label className="flex flex-col gap-1">
-      <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-        {label}
-      </span>
-      <div className="flex items-center gap-2">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="h-9 flex-1 rounded-md border border-input bg-background px-3 text-sm outline-none focus:border-ring focus:ring-1 focus:ring-ring"
-        >
-          <option value="">All</option>
-          {options.map((o) => (
-            <option key={o} value={o}>
-              {o}
-            </option>
-          ))}
-        </select>
-        {value && (
-          <button
-            onClick={() => onChange("")}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        )}
-      </div>
-    </label>
   );
 }

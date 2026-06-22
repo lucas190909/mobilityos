@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { FileText, GraduationCap, Search as SearchIcon, Users, SquareCheck as CheckSquare } from "lucide-react";
+import { useMemo, useEffect } from "react";
+import { FileText, GraduationCap, Search as SearchIcon, Users, SquareCheck as CheckSquare, Mail, ArrowRight } from "lucide-react";
 import { Card, EmptyHint, PageHeader } from "@/components/ui-bits";
 import { useData } from "@/lib/data-provider";
 import { globalSearch } from "@/lib/database";
@@ -20,6 +20,13 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Document: FileText,
 };
 
+const TONE: Record<string, string> = {
+  Client: "bg-primary/10 text-primary",
+  Task: "bg-warning/15 text-warning-foreground",
+  University: "bg-success/15 text-success",
+  Document: "bg-secondary text-secondary-foreground",
+};
+
 function SearchPage() {
   const { q } = Route.useSearch();
   const navigate = Route.useNavigate();
@@ -35,6 +42,12 @@ function SearchPage() {
     return map;
   }, [results]);
 
+  // Focus search input on mount
+  useEffect(() => {
+    const input = document.querySelector<HTMLInputElement>("[data-search-input]");
+    input?.focus();
+  }, []);
+
   if (isLoading) {
     return (
       <div>
@@ -47,35 +60,61 @@ function SearchPage() {
   return (
     <div>
       <PageHeader
-        title="Search"
-        description="Search across clients, tasks, universities and documents."
+        title="Global Search"
+        description="Search across clients, applications, universities, documents and tasks."
       />
 
       <Card className="mb-4 p-3">
         <div className="relative">
           <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
+            data-search-input
             autoFocus
             value={q}
             onChange={(e) => navigate({ search: { q: e.target.value } })}
-            placeholder="Type to search…"
-            className="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm outline-none focus:border-ring focus:ring-1 focus:ring-ring"
+            placeholder="Type to search across MobilityOS…"
+            className="h-10 w-full rounded-lg border border-input bg-background pl-9 pr-3 text-sm outline-none transition focus:border-ring focus:ring-1 focus:ring-ring"
           />
         </div>
       </Card>
 
       {!q ? (
-        <EmptyHint>Start typing to search across MobilityOS.</EmptyHint>
+        <EmptyHint>
+          <div className="space-y-2">
+            <div className="text-sm">Start typing to search across MobilityOS</div>
+            <div className="text-xs text-muted-foreground">
+              Try: client name, university, document type, task title
+            </div>
+          </div>
+        </EmptyHint>
       ) : results.length === 0 ? (
-        <EmptyHint>No results for "{q}".</EmptyHint>
+        <EmptyHint>
+          <div className="space-y-2">
+            <div className="text-sm">No results for "{q}"</div>
+            <div className="text-xs text-muted-foreground">Try a different search term</div>
+          </div>
+        </EmptyHint>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
+          <div className="text-xs text-muted-foreground">
+            {results.length} result{results.length !== 1 ? "s" : ""} found
+          </div>
           {Object.entries(grouped).map(([type, items]) => {
             const Icon = ICONS[type] ?? SearchIcon;
             return (
-              <Card key={type} className="p-0">
-                <div className="border-b border-border bg-secondary/40 px-5 py-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  {type}s ({items.length})
+              <Card key={type} className="p-0 transition hover:shadow-sm">
+                <div className="flex items-center gap-2 border-b border-border bg-secondary/40 px-4 py-2.5">
+                  <span
+                    className={
+                      "flex h-6 w-6 items-center justify-center rounded-md " +
+                      (TONE[type] ?? TONE.Document)
+                    }
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                  </span>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    {type}s ({items.length})
+                  </span>
                 </div>
                 <ul className="divide-y divide-border">
                   {items.map((r) => (
@@ -83,15 +122,13 @@ function SearchPage() {
                       <Link
                         to="/clients/$id"
                         params={{ id: r.clientId }}
-                        className="flex items-center gap-3 px-5 py-3 hover:bg-secondary/30"
+                        className="flex items-center gap-3 px-4 py-3 transition hover:bg-secondary/30"
                       >
-                        <span className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-accent-foreground">
-                          <Icon className="h-4 w-4" />
-                        </span>
                         <div className="min-w-0 flex-1">
                           <div className="truncate text-sm font-medium">{r.title}</div>
                           <div className="truncate text-xs text-muted-foreground">{r.subtitle}</div>
                         </div>
+                        <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
                       </Link>
                     </li>
                   ))}

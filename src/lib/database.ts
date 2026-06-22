@@ -170,28 +170,107 @@ function pick<T>(arr: T[], i: number): T {
   return arr[i % arr.length];
 }
 
-const NAMES = [
-  "Aarav Sharma",
-  "Sofia Martinez",
-  "Liam Chen",
-  "Amelia Okafor",
-  "Noah Tanaka",
-  "Isabella Rossi",
-  "Mateo Silva",
-  "Olivia Dubois",
-  "Yusuf Demir",
-  "Mei Wang",
-  "Carlos Mendoza",
-  "Priya Patel",
-  "Ethan Kim",
-  "Layla Hassan",
-  "Lucas Becker",
-  "Zara Ahmed",
-  "Diego Rivera",
-  "Nora Lindqvist",
-  "Hiro Yamada",
-  "Anaya Iyer",
+const FIRST_NAMES = [
+  "Aarav",
+  "Sofia",
+  "Liam",
+  "Amelia",
+  "Noah",
+  "Isabella",
+  "Mateo",
+  "Olivia",
+  "Yusuf",
+  "Mei",
+  "Carlos",
+  "Priya",
+  "Ethan",
+  "Layla",
+  "Lucas",
+  "Zara",
+  "Diego",
+  "Nora",
+  "Hiro",
+  "Anaya",
+  "Raj",
+  "Elena",
+  "Wei",
+  "Fatima",
+  "Kai",
+  "Maria",
+  "Ahmed",
+  "Yuki",
+  "Omar",
+  "Ingrid",
+  "Leo",
+  "Aisha",
+  "Chen",
+  "Nadia",
+  "Tom",
+  "Sakura",
+  "Ivan",
+  "Amara",
+  "Jin",
+  "Lena",
 ];
+const LAST_NAMES = [
+  "Sharma",
+  "Martinez",
+  "Chen",
+  "Okafor",
+  "Tanaka",
+  "Rossi",
+  "Silva",
+  "Dubois",
+  "Demir",
+  "Wang",
+  "Mendoza",
+  "Patel",
+  "Kim",
+  "Hassan",
+  "Becker",
+  "Ahmed",
+  "Rivera",
+  "Lindqvist",
+  "Yamada",
+  "Iyer",
+  "Singh",
+  "Kowalski",
+  "Zhang",
+  "Al-Rashid",
+  "Nakamura",
+  "Fernandez",
+  "Osei",
+  "Popov",
+  "Nguyen",
+  "Andersen",
+  "Bakshi",
+  "Costa",
+  "Jensen",
+  "Khan",
+  "Liu",
+  "Muller",
+  "Park",
+  "Ramos",
+  "Sato",
+  "Thompson",
+];
+
+function generateNames(count: number): string[] {
+  const names: string[] = [];
+  const used = new Set<string>();
+  let attempts = 0;
+  while (names.length < count && attempts < count * 10) {
+    attempts++;
+    const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
+    const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+    const full = `${first} ${last}`;
+    if (!used.has(full)) {
+      used.add(full);
+      names.push(full);
+    }
+  }
+  return names;
+}
 
 const DOC_TEMPLATE: Omit<Document, "id" | "client_id">[] = [
   { name: "Passport", status: "Approved", uploaded_at: "2026-02-12", expires_at: "2029-08-01" },
@@ -284,7 +363,8 @@ export function buildSeedClients(): Omit<
   Client,
   "documents" | "universities" | "tasks" | "timeline"
 >[] {
-  return NAMES.map((name, i) => {
+  const names = generateNames(40);
+  return names.map((name, i) => {
     const stage = STAGES[i % STAGES.length];
     const progress = Math.min(100, (STAGES.indexOf(stage) + 1) * 12 + (i % 5));
     const destination = pick(DESTINATIONS, i);

@@ -19,6 +19,7 @@ import { Route as AppSearchRouteImport } from './routes/_app.search'
 import { Route as AppDocumentsRouteImport } from './routes/_app.documents'
 import { Route as AppCalendarRouteImport } from './routes/_app.calendar'
 import { Route as AppApplicationsRouteImport } from './routes/_app.applications'
+import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
 import { Route as AppAiRouteImport } from './routes/_app.ai'
 import { Route as AppClientsIndexRouteImport } from './routes/_app.clients.index'
 import { Route as AppClientsIdRouteImport } from './routes/_app.clients.$id'
@@ -72,6 +73,11 @@ const AppApplicationsRoute = AppApplicationsRouteImport.update({
   path: '/applications',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAiRoute = AppAiRouteImport.update({
   id: '/ai',
   path: '/ai',
@@ -91,6 +97,7 @@ const AppClientsIdRoute = AppClientsIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/ai': typeof AppAiRoute
+  '/analytics': typeof AppAnalyticsRoute
   '/applications': typeof AppApplicationsRoute
   '/calendar': typeof AppCalendarRoute
   '/documents': typeof AppDocumentsRoute
@@ -104,6 +111,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/ai': typeof AppAiRoute
+  '/analytics': typeof AppAnalyticsRoute
   '/applications': typeof AppApplicationsRoute
   '/calendar': typeof AppCalendarRoute
   '/documents': typeof AppDocumentsRoute
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/_app/ai': typeof AppAiRoute
+  '/_app/analytics': typeof AppAnalyticsRoute
   '/_app/applications': typeof AppApplicationsRoute
   '/_app/calendar': typeof AppCalendarRoute
   '/_app/documents': typeof AppDocumentsRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/ai'
+    | '/analytics'
     | '/applications'
     | '/calendar'
     | '/documents'
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/ai'
+    | '/analytics'
     | '/applications'
     | '/calendar'
     | '/documents'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_app'
     | '/_app/ai'
+    | '/_app/analytics'
     | '/_app/applications'
     | '/_app/calendar'
     | '/_app/documents'
@@ -254,6 +266,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppApplicationsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/analytics': {
+      id: '/_app/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AppAnalyticsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/ai': {
       id: '/_app/ai'
       path: '/ai'
@@ -280,6 +299,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAiRoute: typeof AppAiRoute
+  AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppApplicationsRoute: typeof AppApplicationsRoute
   AppCalendarRoute: typeof AppCalendarRoute
   AppDocumentsRoute: typeof AppDocumentsRoute
@@ -295,6 +315,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAiRoute: AppAiRoute,
+  AppAnalyticsRoute: AppAnalyticsRoute,
   AppApplicationsRoute: AppApplicationsRoute,
   AppCalendarRoute: AppCalendarRoute,
   AppDocumentsRoute: AppDocumentsRoute,
