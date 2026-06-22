@@ -16,7 +16,6 @@ import {
   Moon,
   Sun,
   Menu,
-  X,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { ClientFormDialog } from "@/components/dialogs";
