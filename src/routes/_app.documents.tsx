@@ -146,14 +146,6 @@ function DocumentsPage() {
           </div>
         )}
       </Card>
-
-      {uploadFor && (
-        <DocumentFormDialog
-          open={!!uploadFor}
-          onOpenChange={v => !v && setUploadFor(null)}
-          clientId={uploadFor}
-        />
-      )}
     </div>
   );
 }
