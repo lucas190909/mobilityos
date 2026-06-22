@@ -186,6 +186,3 @@ export function AppShell({ children }: { children?: ReactNode }) {
     </div>
   );
 }
-
-// Export so unused import warnings don't fire for `X` reserved usage
-export const __XIcon = X;
