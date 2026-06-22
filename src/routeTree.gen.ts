@@ -9,61 +9,289 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as AppIndexRouteImport } from './routes/_app.index'
+import { Route as AppUniversitiesRouteImport } from './routes/_app.universities'
+import { Route as AppTeamRouteImport } from './routes/_app.team'
+import { Route as AppTasksRouteImport } from './routes/_app.tasks'
+import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppDocumentsRouteImport } from './routes/_app.documents'
+import { Route as AppCalendarRouteImport } from './routes/_app.calendar'
+import { Route as AppApplicationsRouteImport } from './routes/_app.applications'
+import { Route as AppAiRouteImport } from './routes/_app.ai'
+import { Route as AppClientsIndexRouteImport } from './routes/_app.clients.index'
+import { Route as AppClientsIdRouteImport } from './routes/_app.clients.$id'
 
-const IndexRoute = IndexRouteImport.update({
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
+} as any)
+const AppUniversitiesRoute = AppUniversitiesRouteImport.update({
+  id: '/universities',
+  path: '/universities',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTeamRoute = AppTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTasksRoute = AppTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDocumentsRoute = AppDocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCalendarRoute = AppCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppApplicationsRoute = AppApplicationsRouteImport.update({
+  id: '/applications',
+  path: '/applications',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAiRoute = AppAiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppClientsIndexRoute = AppClientsIndexRouteImport.update({
+  id: '/clients/',
+  path: '/clients/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppClientsIdRoute = AppClientsIdRouteImport.update({
+  id: '/clients/$id',
+  path: '/clients/$id',
+  getParentRoute: () => AppRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof AppIndexRoute
+  '/ai': typeof AppAiRoute
+  '/applications': typeof AppApplicationsRoute
+  '/calendar': typeof AppCalendarRoute
+  '/documents': typeof AppDocumentsRoute
+  '/settings': typeof AppSettingsRoute
+  '/tasks': typeof AppTasksRoute
+  '/team': typeof AppTeamRoute
+  '/universities': typeof AppUniversitiesRoute
+  '/clients/$id': typeof AppClientsIdRoute
+  '/clients/': typeof AppClientsIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/ai': typeof AppAiRoute
+  '/applications': typeof AppApplicationsRoute
+  '/calendar': typeof AppCalendarRoute
+  '/documents': typeof AppDocumentsRoute
+  '/settings': typeof AppSettingsRoute
+  '/tasks': typeof AppTasksRoute
+  '/team': typeof AppTeamRoute
+  '/universities': typeof AppUniversitiesRoute
+  '/': typeof AppIndexRoute
+  '/clients/$id': typeof AppClientsIdRoute
+  '/clients': typeof AppClientsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
+  '/_app/ai': typeof AppAiRoute
+  '/_app/applications': typeof AppApplicationsRoute
+  '/_app/calendar': typeof AppCalendarRoute
+  '/_app/documents': typeof AppDocumentsRoute
+  '/_app/settings': typeof AppSettingsRoute
+  '/_app/tasks': typeof AppTasksRoute
+  '/_app/team': typeof AppTeamRoute
+  '/_app/universities': typeof AppUniversitiesRoute
+  '/_app/': typeof AppIndexRoute
+  '/_app/clients/$id': typeof AppClientsIdRoute
+  '/_app/clients/': typeof AppClientsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/ai'
+    | '/applications'
+    | '/calendar'
+    | '/documents'
+    | '/settings'
+    | '/tasks'
+    | '/team'
+    | '/universities'
+    | '/clients/$id'
+    | '/clients/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/ai'
+    | '/applications'
+    | '/calendar'
+    | '/documents'
+    | '/settings'
+    | '/tasks'
+    | '/team'
+    | '/universities'
+    | '/'
+    | '/clients/$id'
+    | '/clients'
+  id:
+    | '__root__'
+    | '/_app'
+    | '/_app/ai'
+    | '/_app/applications'
+    | '/_app/calendar'
+    | '/_app/documents'
+    | '/_app/settings'
+    | '/_app/tasks'
+    | '/_app/team'
+    | '/_app/universities'
+    | '/_app/'
+    | '/_app/clients/$id'
+    | '/_app/clients/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/': {
+      id: '/_app/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/universities': {
+      id: '/_app/universities'
+      path: '/universities'
+      fullPath: '/universities'
+      preLoaderRoute: typeof AppUniversitiesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/team': {
+      id: '/_app/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof AppTeamRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/tasks': {
+      id: '/_app/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof AppTasksRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/documents': {
+      id: '/_app/documents'
+      path: '/documents'
+      fullPath: '/documents'
+      preLoaderRoute: typeof AppDocumentsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/calendar': {
+      id: '/_app/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof AppCalendarRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/applications': {
+      id: '/_app/applications'
+      path: '/applications'
+      fullPath: '/applications'
+      preLoaderRoute: typeof AppApplicationsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/ai': {
+      id: '/_app/ai'
+      path: '/ai'
+      fullPath: '/ai'
+      preLoaderRoute: typeof AppAiRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/clients/': {
+      id: '/_app/clients/'
+      path: '/clients'
+      fullPath: '/clients/'
+      preLoaderRoute: typeof AppClientsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/clients/$id': {
+      id: '/_app/clients/$id'
+      path: '/clients/$id'
+      fullPath: '/clients/$id'
+      preLoaderRoute: typeof AppClientsIdRouteImport
+      parentRoute: typeof AppRoute
     }
   }
 }
 
+interface AppRouteChildren {
+  AppAiRoute: typeof AppAiRoute
+  AppApplicationsRoute: typeof AppApplicationsRoute
+  AppCalendarRoute: typeof AppCalendarRoute
+  AppDocumentsRoute: typeof AppDocumentsRoute
+  AppSettingsRoute: typeof AppSettingsRoute
+  AppTasksRoute: typeof AppTasksRoute
+  AppTeamRoute: typeof AppTeamRoute
+  AppUniversitiesRoute: typeof AppUniversitiesRoute
+  AppIndexRoute: typeof AppIndexRoute
+  AppClientsIdRoute: typeof AppClientsIdRoute
+  AppClientsIndexRoute: typeof AppClientsIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppAiRoute: AppAiRoute,
+  AppApplicationsRoute: AppApplicationsRoute,
+  AppCalendarRoute: AppCalendarRoute,
+  AppDocumentsRoute: AppDocumentsRoute,
+  AppSettingsRoute: AppSettingsRoute,
+  AppTasksRoute: AppTasksRoute,
+  AppTeamRoute: AppTeamRoute,
+  AppUniversitiesRoute: AppUniversitiesRoute,
+  AppIndexRoute: AppIndexRoute,
+  AppClientsIdRoute: AppClientsIdRoute,
+  AppClientsIndexRoute: AppClientsIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
