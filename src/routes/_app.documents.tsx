@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { FileText, Filter } from "lucide-react";
 import { Card, EmptyHint, PageHeader, StatusPill } from "@/components/ui-bits";
 import { setDocumentStatus, useStore } from "@/lib/store";
-import { DeleteDocumentButton, DocumentFormDialog } from "@/components/dialogs";
+import { DeleteDocumentButton } from "@/components/dialogs";
 import { toast } from "sonner";
 
 const STATUSES = ["Missing", "Pending Review", "Approved", "Rejected"] as const;
