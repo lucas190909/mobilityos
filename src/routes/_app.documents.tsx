@@ -56,7 +56,7 @@ function DocumentsPage() {
       <Card className="mb-4 p-3">
         <input
           value={search.q}
-          onChange={e => navigate({ search: prev => ({ ...prev, q: e.target.value }) })}
+          onChange={e => navigate({ search: (prev: typeof search) => ({ ...prev, q: e.target.value }) })}
           placeholder="Search document or client…"
           className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:border-ring focus:ring-1 focus:ring-ring"
         />
@@ -66,7 +66,7 @@ function DocumentsPage() {
               <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Status</span>
               <select
                 value={search.status}
-                onChange={e => navigate({ search: prev => ({ ...prev, status: e.target.value }) })}
+                onChange={e => navigate({ search: (prev: typeof search) => ({ ...prev, status: e.target.value }) })}
                 className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:border-ring focus:ring-1 focus:ring-ring"
               >
                 <option value="">All</option>
