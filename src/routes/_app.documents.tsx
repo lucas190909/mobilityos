@@ -22,7 +22,7 @@ function DocumentsPage() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
   const [showFilters, setShowFilters] = useState(false);
-  const [uploadFor, setUploadFor] = useState<string | null>(null);
+  
 
   const rows = useMemo(
     () => clients.flatMap(c => c.documents.map(d => ({ ...d, client: c.name, clientId: c.id }))),
