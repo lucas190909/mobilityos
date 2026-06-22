@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card, PageHeader } from "@/components/ui-bits";
-import { ALL_TASKS, CLIENTS } from "@/lib/mock-data";
+import { selectAllTasks, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/_app/calendar")({
   head: () => ({ meta: [{ title: "Calendar — MobilityOS" }] }),
@@ -8,20 +8,23 @@ export const Route = createFileRoute("/_app/calendar")({
 });
 
 function CalendarPage() {
-  const today = new Date("2026-04-15");
+  const clients = useStore(s => s.clients);
+  const tasks = useStore(selectAllTasks);
+  const today = new Date();
   const year = today.getFullYear();
   const month = today.getMonth();
   const first = new Date(year, month, 1);
   const startOffset = first.getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  const events: Record<string, { title: string; type: string }[]> = {};
-  ALL_TASKS.forEach(t => {
+  const events: Record<string, { title: string; type: string; clientId?: string }[]> = {};
+  tasks.forEach(t => {
     const key = t.deadline;
-    (events[key] ||= []).push({ title: t.title, type: t.priority });
+    if (!key) return;
+    (events[key] ||= []).push({ title: t.title, type: t.priority, clientId: t.clientId });
   });
-  CLIENTS.forEach(c => {
-    if (c.deadline) (events[c.deadline] ||= []).push({ title: `${c.name} deadline`, type: "Application" });
+  clients.forEach(c => {
+    if (c.deadline) (events[c.deadline] ||= []).push({ title: `${c.name} deadline`, type: "Application", clientId: c.id });
   });
 
   const cells: ({ day: number; key: string } | null)[] = [];
@@ -32,6 +35,7 @@ function CalendarPage() {
   }
 
   const monthName = first.toLocaleString("en-US", { month: "long", year: "numeric" });
+  const todayLabel = today.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
   return (
     <div>
@@ -40,10 +44,10 @@ function CalendarPage() {
       <Card className="p-0">
         <div className="flex items-center justify-between border-b border-border px-5 py-3">
           <h3 className="text-sm font-semibold">{monthName}</h3>
-          <div className="text-xs text-muted-foreground">Today: April 15, 2026</div>
+          <div className="text-xs text-muted-foreground">Today: {todayLabel}</div>
         </div>
         <div className="grid grid-cols-7 border-b border-border bg-secondary/40 text-xs font-medium text-muted-foreground">
-          {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d => (
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
             <div key={d} className="px-3 py-2">{d}</div>
           ))}
         </div>
@@ -66,11 +70,22 @@ function CalendarPage() {
                       {c.day}
                     </div>
                     <div className="space-y-1">
-                      {dayEvents.slice(0, 2).map((e, j) => (
-                        <div key={j} className="truncate rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">
-                          {e.title}
-                        </div>
-                      ))}
+                      {dayEvents.slice(0, 2).map((e, j) =>
+                        e.clientId ? (
+                          <Link
+                            key={j}
+                            to="/clients/$id"
+                            params={{ id: e.clientId }}
+                            className="block truncate rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary hover:bg-primary/20"
+                          >
+                            {e.title}
+                          </Link>
+                        ) : (
+                          <div key={j} className="truncate rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">
+                            {e.title}
+                          </div>
+                        ),
+                      )}
                       {dayEvents.length > 2 && (
                         <div className="text-[10px] text-muted-foreground">+{dayEvents.length - 2} more</div>
                       )}
