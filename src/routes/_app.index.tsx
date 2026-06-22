@@ -11,13 +11,12 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
-import { Card, PageHeader, SectionTitle, StatusPill, Avatar } from "@/components/ui-bits";
+import { Card, PageHeader, SectionTitle, StatusPill } from "@/components/ui-bits";
 import {
   applicationsByCountry,
   clientsByStage,
@@ -190,6 +189,3 @@ function Dashboard() {
     </div>
   );
 }
-
-// silence unused
-void Cell;

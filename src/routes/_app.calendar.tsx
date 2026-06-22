@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Card, PageHeader, StatusPill } from "@/components/ui-bits";
+import { Card, PageHeader } from "@/components/ui-bits";
 import { ALL_TASKS, CLIENTS } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_app/calendar")({
@@ -85,6 +85,3 @@ function CalendarPage() {
     </div>
   );
 }
-
-// silence unused
-void StatusPill;
