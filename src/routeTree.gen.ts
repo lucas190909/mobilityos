@@ -15,6 +15,7 @@ import { Route as AppUniversitiesRouteImport } from './routes/_app.universities'
 import { Route as AppTeamRouteImport } from './routes/_app.team'
 import { Route as AppTasksRouteImport } from './routes/_app.tasks'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppSearchRouteImport } from './routes/_app.search'
 import { Route as AppDocumentsRouteImport } from './routes/_app.documents'
 import { Route as AppCalendarRouteImport } from './routes/_app.calendar'
 import { Route as AppApplicationsRouteImport } from './routes/_app.applications'
@@ -49,6 +50,11 @@ const AppTasksRoute = AppTasksRouteImport.update({
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSearchRoute = AppSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDocumentsRoute = AppDocumentsRouteImport.update({
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/applications': typeof AppApplicationsRoute
   '/calendar': typeof AppCalendarRoute
   '/documents': typeof AppDocumentsRoute
+  '/search': typeof AppSearchRoute
   '/settings': typeof AppSettingsRoute
   '/tasks': typeof AppTasksRoute
   '/team': typeof AppTeamRoute
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   '/applications': typeof AppApplicationsRoute
   '/calendar': typeof AppCalendarRoute
   '/documents': typeof AppDocumentsRoute
+  '/search': typeof AppSearchRoute
   '/settings': typeof AppSettingsRoute
   '/tasks': typeof AppTasksRoute
   '/team': typeof AppTeamRoute
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/_app/applications': typeof AppApplicationsRoute
   '/_app/calendar': typeof AppCalendarRoute
   '/_app/documents': typeof AppDocumentsRoute
+  '/_app/search': typeof AppSearchRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/tasks': typeof AppTasksRoute
   '/_app/team': typeof AppTeamRoute
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/applications'
     | '/calendar'
     | '/documents'
+    | '/search'
     | '/settings'
     | '/tasks'
     | '/team'
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/applications'
     | '/calendar'
     | '/documents'
+    | '/search'
     | '/settings'
     | '/tasks'
     | '/team'
@@ -157,6 +168,7 @@ export interface FileRouteTypes {
     | '/_app/applications'
     | '/_app/calendar'
     | '/_app/documents'
+    | '/_app/search'
     | '/_app/settings'
     | '/_app/tasks'
     | '/_app/team'
@@ -214,6 +226,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/search': {
+      id: '/_app/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof AppSearchRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/documents': {
       id: '/_app/documents'
       path: '/documents'
@@ -264,6 +283,7 @@ interface AppRouteChildren {
   AppApplicationsRoute: typeof AppApplicationsRoute
   AppCalendarRoute: typeof AppCalendarRoute
   AppDocumentsRoute: typeof AppDocumentsRoute
+  AppSearchRoute: typeof AppSearchRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppTasksRoute: typeof AppTasksRoute
   AppTeamRoute: typeof AppTeamRoute
@@ -278,6 +298,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppApplicationsRoute: AppApplicationsRoute,
   AppCalendarRoute: AppCalendarRoute,
   AppDocumentsRoute: AppDocumentsRoute,
+  AppSearchRoute: AppSearchRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppTasksRoute: AppTasksRoute,
   AppTeamRoute: AppTeamRoute,
