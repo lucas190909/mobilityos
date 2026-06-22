@@ -97,17 +97,17 @@ const DOC_TEMPLATE: Omit<Document, "id">[] = [
 ];
 
 const NAMES = [
-  "Aarav Sharma","Sofia Martinez","Liam Chen","Amelia Okafor","Noah Tanaka",
-  "Isabella Rossi","Mateo Silva","Olivia Dubois","Yusuf Demir","Mei Wang",
-  "Carlos Mendoza","Priya Patel","Ethan Kim","Layla Hassan","Lucas Becker",
-  "Zara Ahmed","Diego Rivera","Nora Lindqvist","Hiro Yamada","Anaya Iyer",
+  "Aarav Sharma", "Sofia Martinez", "Liam Chen", "Amelia Okafor", "Noah Tanaka",
+  "Isabella Rossi", "Mateo Silva", "Olivia Dubois", "Yusuf Demir", "Mei Wang",
+  "Carlos Mendoza", "Priya Patel", "Ethan Kim", "Layla Hassan", "Lucas Becker",
+  "Zara Ahmed", "Diego Rivera", "Nora Lindqvist", "Hiro Yamada", "Anaya Iyer",
 ];
 
-const COUNTRIES_FROM = ["India","Brazil","China","Nigeria","Japan","Italy","Mexico","France","Turkey","Vietnam"];
-const DESTINATIONS = ["Canada","USA","UK","Germany","Australia","Netherlands","Ireland","France"];
-const INTAKES = ["Fall 2026","Spring 2027","Fall 2027"];
-const CONSULTANTS = ["Emma Wilson","James Carter","Priya Singh","Lukas Meyer"];
-const UNIVERSITIES_LIST = [
+export const COUNTRIES_FROM = ["India", "Brazil", "China", "Nigeria", "Japan", "Italy", "Mexico", "France", "Turkey", "Vietnam"];
+export const DESTINATIONS = ["Canada", "USA", "UK", "Germany", "Australia", "Netherlands", "Ireland", "France"];
+export const INTAKES = ["Fall 2026", "Spring 2027", "Fall 2027"];
+export const CONSULTANTS = ["Emma Wilson", "James Carter", "Priya Singh", "Lukas Meyer"];
+export const UNIVERSITIES_LIST = [
   { name: "University of Toronto", country: "Canada", program: "MSc Computer Science" },
   { name: "NYU Stern", country: "USA", program: "MBA" },
   { name: "Imperial College London", country: "UK", program: "MSc Data Science" },
@@ -118,58 +118,61 @@ const UNIVERSITIES_LIST = [
   { name: "Sciences Po", country: "France", program: "MA Public Affairs" },
 ];
 
-function pick<T>(arr: T[], i: number): T { return arr[i % arr.length]; }
+function pick<T>(arr: T[], i: number): T {
+  return arr[i % arr.length];
+}
 
-export const CLIENTS: Client[] = NAMES.map((name, i) => {
-  const stage = STAGES[i % STAGES.length];
-  const progress = Math.min(100, (STAGES.indexOf(stage) + 1) * 12 + (i % 5));
-  const destination = pick(DESTINATIONS, i);
-  const uni = UNIVERSITIES_LIST.find(u => u.country === destination) ?? UNIVERSITIES_LIST[i % UNIVERSITIES_LIST.length];
-  const docs: Document[] = DOC_TEMPLATE.map((d, j) => ({ ...d, id: `${i}-doc-${j}` }));
-  // randomize a bit
-  if (i % 3 === 0) docs[3].status = "Approved";
-  if (i % 4 === 0) docs[7].status = "Pending Review";
+export function buildSeed(): Client[] {
+  return NAMES.map((name, i) => {
+    const stage = STAGES[i % STAGES.length];
+    const progress = Math.min(100, (STAGES.indexOf(stage) + 1) * 12 + (i % 5));
+    const destination = pick(DESTINATIONS, i);
+    const uni =
+      UNIVERSITIES_LIST.find(u => u.country === destination) ??
+      UNIVERSITIES_LIST[i % UNIVERSITIES_LIST.length];
+    const docs: Document[] = DOC_TEMPLATE.map((d, j) => ({ ...d, id: `${i}-doc-${j}` }));
+    if (i % 3 === 0) docs[3].status = "Approved";
+    if (i % 4 === 0) docs[7].status = "Pending Review";
 
-  return {
-    id: `client-${i + 1}`,
-    name,
-    photo: `https://i.pravatar.cc/120?img=${(i % 70) + 1}`,
-    nationality: pick(COUNTRIES_FROM, i),
-    destination,
-    intake: pick(INTAKES, i),
-    status: stage,
-    consultant: pick(CONSULTANTS, i),
-    progress,
-    priority: (["Low","Medium","High"] as const)[i % 3],
-    university: uni.name,
-    deadline: `2026-${String(((i % 9) + 3)).padStart(2,"0")}-${String(((i * 3) % 27) + 1).padStart(2,"0")}`,
-    email: `${name.toLowerCase().replace(/\s+/g, ".")}@mail.com`,
-    phone: `+1 555 0${100 + i}`,
-    documents: docs,
-    universities: [
-      { id: `${i}-u1`, ...uni, deadline: "2026-09-15", status: i % 4 === 0 ? "Accepted" : "Applied", scholarship: i % 3 === 0 ? "$8,000 / year" : undefined },
-      { id: `${i}-u2`, ...UNIVERSITIES_LIST[(i + 2) % UNIVERSITIES_LIST.length], deadline: "2026-11-01", status: "Waiting" },
-    ],
-    tasks: [
-      { id: `${i}-t1`, title: "Request official transcript", clientId: `client-${i + 1}`, consultant: pick(CONSULTANTS, i), deadline: "2026-04-12", priority: "High", status: "In Progress" },
-      { id: `${i}-t2`, title: "Review statement of purpose", clientId: `client-${i + 1}`, consultant: pick(CONSULTANTS, i+1), deadline: "2026-04-20", priority: "Medium", status: "Todo" },
-      { id: `${i}-t3`, title: "Book visa appointment", clientId: `client-${i + 1}`, consultant: pick(CONSULTANTS, i+2), deadline: "2026-05-02", priority: "High", status: "Todo" },
-    ],
-    timeline: [
-      { id: `${i}-e1`, date: "2026-01-10", type: "Consultation", title: "Initial consultation completed" },
-      { id: `${i}-e2`, date: "2026-02-12", type: "Documents", title: "Passport and photo uploaded" },
-      { id: `${i}-e3`, date: "2026-02-28", type: "English Test", title: "IELTS results received (7.5)" },
-      { id: `${i}-e4`, date: "2026-03-15", type: "Application", title: `Application submitted to ${uni.name}` },
-      ...(STAGES.indexOf(stage) >= 4 ? [{ id: `${i}-e5`, date: "2026-04-05", type: "Offer", title: `Offer received from ${uni.name}` }] : []),
-      ...(STAGES.indexOf(stage) >= 5 ? [{ id: `${i}-e6`, date: "2026-05-10", type: "Visa", title: "Visa interview scheduled" }] : []),
-    ],
-    notes: "Strong academic profile. Prefers cities with good public transport. Family is supportive of relocation.",
-    essayReviewed: i % 3 !== 0,
-    visaStatus: STAGES.indexOf(stage) >= 5 ? "In Progress" : "Not Started",
-  };
-});
-
-export const ALL_TASKS: Task[] = CLIENTS.flatMap(c => c.tasks);
+    return {
+      id: `client-${i + 1}`,
+      name,
+      photo: `https://i.pravatar.cc/120?img=${(i % 70) + 1}`,
+      nationality: pick(COUNTRIES_FROM, i),
+      destination,
+      intake: pick(INTAKES, i),
+      status: stage,
+      consultant: pick(CONSULTANTS, i),
+      progress,
+      priority: (["Low", "Medium", "High"] as const)[i % 3],
+      university: uni.name,
+      deadline: `2026-${String((i % 9) + 3).padStart(2, "0")}-${String(((i * 3) % 27) + 1).padStart(2, "0")}`,
+      email: `${name.toLowerCase().replace(/\s+/g, ".")}@mail.com`,
+      phone: `+1 555 0${100 + i}`,
+      documents: docs,
+      universities: [
+        { id: `${i}-u1`, ...uni, deadline: "2026-09-15", status: i % 4 === 0 ? "Accepted" : "Applied", scholarship: i % 3 === 0 ? "$8,000 / year" : undefined },
+        { id: `${i}-u2`, ...UNIVERSITIES_LIST[(i + 2) % UNIVERSITIES_LIST.length], deadline: "2026-11-01", status: "Waiting" },
+      ],
+      tasks: [
+        { id: `${i}-t1`, title: "Request official transcript", clientId: `client-${i + 1}`, consultant: pick(CONSULTANTS, i), deadline: "2026-04-12", priority: "High", status: "In Progress" },
+        { id: `${i}-t2`, title: "Review statement of purpose", clientId: `client-${i + 1}`, consultant: pick(CONSULTANTS, i + 1), deadline: "2026-04-20", priority: "Medium", status: "Todo" },
+        { id: `${i}-t3`, title: "Book visa appointment", clientId: `client-${i + 1}`, consultant: pick(CONSULTANTS, i + 2), deadline: "2026-05-02", priority: "High", status: "Todo" },
+      ],
+      timeline: [
+        { id: `${i}-e1`, date: "2026-01-10", type: "Consultation", title: "Initial consultation completed" },
+        { id: `${i}-e2`, date: "2026-02-12", type: "Documents", title: "Passport and photo uploaded" },
+        { id: `${i}-e3`, date: "2026-02-28", type: "English Test", title: "IELTS results received (7.5)" },
+        { id: `${i}-e4`, date: "2026-03-15", type: "Application", title: `Application submitted to ${uni.name}` },
+        ...(STAGES.indexOf(stage) >= 4 ? [{ id: `${i}-e5`, date: "2026-04-05", type: "Offer", title: `Offer received from ${uni.name}` }] : []),
+        ...(STAGES.indexOf(stage) >= 5 ? [{ id: `${i}-e6`, date: "2026-05-10", type: "Visa", title: "Visa interview scheduled" }] : []),
+      ],
+      notes: "Strong academic profile. Prefers cities with good public transport. Family is supportive of relocation.",
+      essayReviewed: i % 3 !== 0,
+      visaStatus: STAGES.indexOf(stage) >= 5 ? "In Progress" : "Not Started",
+    };
+  });
+}
 
 export const TEAM = [
   { id: "u1", name: "Emma Wilson", role: "Administrator", email: "emma@mobilityos.com", photo: "https://i.pravatar.cc/100?img=47", clients: 12 },
@@ -179,66 +182,16 @@ export const TEAM = [
 ];
 
 export const WORKFLOWS = [
-  {
-    id: "wf1",
-    name: "Canada Student",
-    country: "Canada",
-    steps: ["Consultation","Documents","IELTS","College Application","Offer Letter","Study Permit","Accommodation","Flight"],
-  },
-  {
-    id: "wf2",
-    name: "USA Undergraduate",
-    country: "USA",
-    steps: ["Consultation","SAT","Common App","Acceptance","I-20","F1 Visa","Travel"],
-  },
-  {
-    id: "wf3",
-    name: "UK Master's",
-    country: "UK",
-    steps: ["Consultation","IELTS","UCAS Application","Conditional Offer","CAS Letter","Tier 4 Visa","Accommodation","Flight"],
-  },
+  { id: "wf1", name: "Canada Student", country: "Canada", steps: ["Consultation", "Documents", "IELTS", "College Application", "Offer Letter", "Study Permit", "Accommodation", "Flight"] },
+  { id: "wf2", name: "USA Undergraduate", country: "USA", steps: ["Consultation", "SAT", "Common App", "Acceptance", "I-20", "F1 Visa", "Travel"] },
+  { id: "wf3", name: "UK Master's", country: "UK", steps: ["Consultation", "IELTS", "UCAS Application", "Conditional Offer", "CAS Letter", "Tier 4 Visa", "Accommodation", "Flight"] },
 ];
-
-export function getClient(id: string): Client | undefined {
-  return CLIENTS.find(c => c.id === id);
-}
-
-export function kpis() {
-  const active = CLIENTS.filter(c => c.status !== "Completed" && c.status !== "Lead").length;
-  const waitingDocs = CLIENTS.filter(c => c.documents.some(d => d.status === "Missing" || d.status === "Pending Review")).length;
-  const deadlines = CLIENTS.filter(c => c.deadline && new Date(c.deadline) < new Date("2026-08-01")).length;
-  const submitted = CLIENTS.filter(c => STAGES.indexOf(c.status) >= 3).length;
-  const visasApproved = CLIENTS.filter(c => c.visaStatus === "Approved" || c.status === "Completed").length;
-  return { active, waitingDocs, deadlines, submitted, visasApproved };
-}
-
-export function applicationsByCountry() {
-  const map = new Map<string, number>();
-  CLIENTS.forEach(c => map.set(c.destination, (map.get(c.destination) ?? 0) + 1));
-  return Array.from(map.entries()).map(([country, count]) => ({ country, count }));
-}
-
-export function clientsByStage() {
-  return STAGES.map(s => ({ stage: s, count: CLIENTS.filter(c => c.status === s).length }));
-}
-
-export function recentActivity() {
-  return CLIENTS.flatMap(c => c.timeline.map(e => ({ ...e, client: c.name, clientId: c.id })))
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 10);
-}
-
-export function urgentTasks() {
-  return ALL_TASKS
-    .filter(t => t.priority === "High" && t.status !== "Done")
-    .slice(0, 6)
-    .map(t => ({ ...t, clientName: CLIENTS.find(c => c.id === t.clientId)?.name ?? "" }));
-}
 
 export function aiSuggestionsFor(client: Client): string[] {
   const out: string[] = [];
   const missing = client.documents.filter(d => d.status === "Missing");
-  if (missing.length) out.push(`This client is missing ${missing.length} required document${missing.length > 1 ? "s" : ""} (${missing.map(m => m.name).join(", ")}).`);
+  if (missing.length)
+    out.push(`This client is missing ${missing.length} required document${missing.length > 1 ? "s" : ""} (${missing.map(m => m.name).join(", ")}).`);
   const passport = client.documents.find(d => d.name === "Passport");
   if (passport?.expiresAt && new Date(passport.expiresAt) < new Date("2027-01-01")) {
     out.push("The passport expires within 6 months of the intended travel date. Renewal recommended.");
